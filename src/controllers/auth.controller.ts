@@ -80,7 +80,7 @@ export class AuthController {
         return c.json({ code: 'ACCOUNT_DISABLED', message: 'Account is disabled' }, 403);
       }
 
-      const tokenResult = newAPIToken();
+      const tokenResult = await newAPIToken();
       const expiresAt = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
 
       const apiRepo = new (await import('../repositories')).APIRepository(this.db);

@@ -10,10 +10,10 @@ function bufferToHex(buffer: ArrayBuffer): string {
     .join('');
 }
 
-export function newAPIToken(): TokenResult {
+export async function newAPIToken(): Promise<TokenResult> {
   const raw = crypto.getRandomValues(new Uint8Array(32));
   const plain = 'kldns_' + bufferToHex(raw);
-  const hash = hashBearerToken(plain);
+  const hash = await hashBearerToken(plain);
   const hint = tokenHint(plain);
   return { plain, hash, hint };
 }

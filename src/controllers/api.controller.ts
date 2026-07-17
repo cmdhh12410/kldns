@@ -278,7 +278,7 @@ export class APIController {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing token name' }, 400);
       }
 
-      const tokenResult = newAPIToken();
+      const tokenResult = await newAPIToken();
       const expiresAt = Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60;
 
       const apiRepo = new APIRepository(this.db);
