@@ -38,6 +38,12 @@ D1_DB_NAME="kldns-db"
 KV_NAMESPACE_NAME="kldns-kv"
 MIGRATIONS_DIR="./migrations"
 
+# 自动加载 Cloudflare Token
+if [ -z "$CLOUDFLARE_API_TOKEN" ] && [ -f ".cloudflare_token" ]; then
+    export CLOUDFLARE_API_TOKEN=$(cat .cloudflare_token | tr -d '[:space:]')
+    log_info "已从 .cloudflare_token 加载 Cloudflare Token"
+fi
+
 # ============================================
 # Step 1: 环境检查
 # ============================================

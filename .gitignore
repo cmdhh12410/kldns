@@ -14,3 +14,4 @@ AGENTS.md
 .env
 .dev.vars
 node_modules/
+.cloudflare_token
