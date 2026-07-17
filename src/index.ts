@@ -1,6 +1,9 @@
 import { createRouter } from './routes/router';
 import type { Env } from './types';
 
+// 导入 DNS 提供商注册（副作用导入，触发所有提供商的 registerProvider）
+import './dns';
+
 export type { Env };
 
 const app = createRouter();
