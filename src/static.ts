@@ -51,54 +51,71 @@ function isStaticAsset(path: string): boolean {
 }
 
 /**
+ * 从 KV 命名空间读取文件
+ */
+async function getFromKV(kv: KVNamespace, key: string): Promise<ArrayBuffer | null> {
+  try {
+    return await kv.get(key, 'arrayBuffer');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 构建文件响应
+ */
+function fileResponse(content: ArrayBuffer, path: string): Response {
+  return new Response(content, {
+    headers: {
+      'Content-Type': getMimeType(path),
+      'Cache-Control': isStaticAsset(path)
+        ? 'public, max-age=31536000, immutable'
+        : 'public, max-age=3600',
+    },
+  });
+}
+
+/**
  * 处理前端静态资源服务
- * 优先从 KV 存储读取，如果不存在则尝试从本地读取
+ * 优先从 Workers Sites (__STATIC_CONTENT) 读取，其次从自定义 KV 读取
  */
 export async function serveStatic(c: Context): Promise<Response> {
   const url = new URL(c.req.url);
-  let pathname = url.pathname;
+  const normalizedPath = normalizePath(url.pathname);
 
-  // 规范化路径
-  const normalizedPath = normalizePath(pathname);
-  
-  // 尝试从 KV 读取文件
-  const env = c.env as { KV?: KVNamespace };
-  if (env.KV) {
-    try {
-      const kvKey = `static:${normalizedPath}`;
-      const content = await env.KV.get(kvKey, 'arrayBuffer');
-      
-      if (content) {
-        const mimeType = getMimeType(normalizedPath);
-        return new Response(content, {
-          headers: {
-            'Content-Type': mimeType,
-            'Cache-Control': isStaticAsset(normalizedPath) 
-              ? 'public, max-age=31536000, immutable' 
-              : 'public, max-age=3600',
-          },
-        });
-      }
-    } catch (error) {
-      console.error('KV read error:', error);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const env = c.env as any;
+
+  // 1. 优先从 Workers Sites 的 __STATIC_CONTENT 读取
+  if (env.__STATIC_CONTENT) {
+    const content = await getFromKV(env.__STATIC_CONTENT, normalizedPath);
+    if (content) {
+      return fileResponse(content, normalizedPath);
     }
   }
 
-  // SPA 路由支持：如果不是静态资源请求，返回 index.html
+  // 2. 其次从自定义 KV 读取
+  if (env.KV) {
+    const content = await getFromKV(env.KV, `static:${normalizedPath}`);
+    if (content) {
+      return fileResponse(content, normalizedPath);
+    }
+  }
+
+  // 3. SPA 路由支持：非静态资源请求返回 index.html
   if (!isStaticAsset(normalizedPath)) {
+    // 优先从 Workers Sites
+    if (env.__STATIC_CONTENT) {
+      const indexContent = await getFromKV(env.__STATIC_CONTENT, 'index.html');
+      if (indexContent) {
+        return fileResponse(indexContent, 'index.html');
+      }
+    }
+    // 其次从自定义 KV
     if (env.KV) {
-      try {
-        const indexContent = await env.KV.get('static:index.html', 'arrayBuffer');
-        if (indexContent) {
-          return new Response(indexContent, {
-            headers: {
-              'Content-Type': 'text/html; charset=utf-8',
-              'Cache-Control': 'public, max-age=3600',
-            },
-          });
-        }
-      } catch (error) {
-        console.error('KV index.html read error:', error);
+      const indexContent = await getFromKV(env.KV, 'static:index.html');
+      if (indexContent) {
+        return fileResponse(indexContent, 'index.html');
       }
     }
   }
