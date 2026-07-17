@@ -65,12 +65,22 @@ export class SettingsController {
   async getTurnstileSettings(c: Context) {
     try {
       const settingsRepo = new SettingsRepository(this.db);
-      const turnstileSettings = await settingsRepo.getJSON('array_turnstile');
-      
+      const turnstileSettings = await settingsRepo.getJSON<{
+        site_key: string;
+        register_enabled: string;
+        login_enabled: string;
+      }>('array_turnstile');
+
+      const data = {
+        site_key: turnstileSettings?.site_key || '',
+        register_enabled: turnstileSettings?.register_enabled === '1',
+        login_enabled: turnstileSettings?.login_enabled === '1',
+      };
+
       return c.json({
         code: 'OK',
         message: 'Success',
-        data: turnstileSettings
+        data
       });
     } catch (error) {
       console.error('Get turnstile settings error:', error);
