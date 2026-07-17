@@ -1,19 +1,23 @@
 import { createRouter } from './routes/router';
-import { serveStatic } from './static';
 import type { Env } from './types';
 
 export type { Env };
 
 const app = createRouter();
 
-// 处理 API 请求
-app.all('/api/*', async (c) => {
-  return c.json({ code: 'NOT_FOUND', message: 'API endpoint not found' }, 404);
-});
+app.all('*', async (c) => {
+  const url = new URL(c.req.url);
+  const accept = c.req.header('Accept') || '';
 
-// 处理前端静态资源
-app.get('*', async (c) => {
-  return serveStatic(c);
+  if (c.req.method === 'GET' && accept.includes('text/html')) {
+    const indexUrl = new URL('/index.html', c.req.url).toString();
+    const res = await fetch(indexUrl, c.req.raw);
+    if (res.ok) {
+      return res;
+    }
+  }
+
+  return c.json({ code: 'NOT_FOUND', message: 'Not Found' }, 404);
 });
 
 export default {

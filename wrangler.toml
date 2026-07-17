@@ -19,9 +19,9 @@ id = "0c18af9cfa804fa587589f2441f1671d"
 APP_NAME = "kldns"
 APP_MODE = "production"
 
-# 静态资源配置
-[site]
-bucket = "./web/dist"
+# 静态资源 (Assets 模式 - Wrangler v3 推荐)
+[assets]
+directory = "./web/dist"
 
 # 构建配置
 [build]
