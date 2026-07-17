@@ -1,0 +1,1 @@
+import{h as n}from"./index-CLvzR696.js";function o(t={}){return n.get("/subdomains",{params:t})}function a(t){return n.post("/subdomains",t)}function i(t,s){return n.delete(`/subdomains/${t}`,{data:s})}export{i as d,o as l,a as r};

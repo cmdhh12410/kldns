@@ -1,0 +1,1 @@
+function a(s,n){var t;if(typeof s=="object"&&s&&"response"in s){const e=s.response;return((t=e==null?void 0:e.data)==null?void 0:t.message)||n}return s instanceof Error&&s.message?s.message:n}export{a};

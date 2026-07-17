@@ -1,0 +1,46 @@
+import{p}from"./el-button-D5jxeYe4.js";import{S as r}from"./shield-check-PCVa9T5X.js";import{c as n}from"./createLucideIcon-C9rZe60l.js";import{K as i}from"./key-round-Bil3NA8U.js";import{g as q,h as v,i as o,j as a,k as c,u as d,m as e,Y as s,o as l}from"./vue-Drudg60W.js";import{_ as m}from"./index-CLvzR696.js";/**
+ * @license lucide-vue-next v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const g=n("braces",[["path",{d:"M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1",key:"ezmyqa"}],["path",{d:"M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1",key:"e1hn23"}]]);/**
+ * @license lucide-vue-next v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const T=n("terminal",[["path",{d:"M12 19h8",key:"baeox8"}],["path",{d:"m4 17 6-6-6-6",key:"1yngyt"}]]),_={class:"page-stack api-docs-page"},A={class:"page-header page-header-with-action"},N={class:"doc-grid"},h={class:"resource-card doc-panel"},E={class:"panel-title"},O={class:"resource-card doc-panel"},D={class:"panel-title"},k={class:"resource-card doc-panel"},y={class:"panel-title"},I=q({__name:"UserApiDocs",setup(K){return(u,t)=>{const f=p;return l(),v("section",_,[o("header",A,[t[2]||(t[2]=o("div",null,[o("h1",null,"API 文档"),o("p",{class:"resource-note"},"开放 API 仅支持查询已注册二级域名，以及新增、编辑、删除解析记录。")],-1)),a(f,{onClick:t[0]||(t[0]=P=>u.$router.push("/home/tokens"))},{default:c(()=>[a(d(i),{size:16}),t[1]||(t[1]=e("管理令牌",-1))]),_:1})]),o("section",N,[o("article",h,[o("div",E,[a(d(r),{size:20}),t[3]||(t[3]=o("h2",null,"鉴权",-1))]),t[4]||(t[4]=o("p",null,"所有开放 API 都使用用户中心创建的 API Token，放在请求头中。",-1)),t[5]||(t[5]=o("pre",null,[o("code",null,"Authorization: Bearer <API_TOKEN>")],-1)),t[6]||(t[6]=o("p",null,"API Token 不能访问用户资料、积分、令牌管理、域名注册和后台接口。",-1))]),o("article",O,[o("div",D,[a(d(g),{size:20}),t[7]||(t[7]=o("h2",null,"响应格式",-1))]),t[8]||(t[8]=o("pre",null,[o("code",null,`{
+  "code": "OK",
+  "message": "",
+  "data": {}
+}`)],-1)),t[9]||(t[9]=o("p",null,[e("失败时 HTTP 状态码和 "),o("code",null,"code"),e(" 会同时表达错误类型。")],-1))])]),t[12]||(t[12]=s(`<section class="resource-card endpoint-panel" data-v-7f15f443><div class="endpoint-head" data-v-7f15f443><span class="method get" data-v-7f15f443>GET</span><strong data-v-7f15f443>/api/subdomains</strong></div><p data-v-7f15f443>查询当前账号已注册的二级域名列表。解析记录写入前，先从这里获取 <code data-v-7f15f443>subdomain_id</code> 和支持的 <code data-v-7f15f443>record_types</code>。</p><div class="doc-table" data-v-7f15f443><div data-v-7f15f443><strong data-v-7f15f443>status</strong><span data-v-7f15f443>可选。传 1 只返回正常可解析的二级域名。</span></div><div data-v-7f15f443><strong data-v-7f15f443>keyword</strong><span data-v-7f15f443>可选。按二级域名、主域、用途或驳回原因搜索。</span></div></div><pre data-v-7f15f443><code data-v-7f15f443>curl -H &quot;Authorization: Bearer $KLDNS_TOKEN&quot; \\
+  &quot;https://example.com/api/subdomains?status=1&quot;</code></pre><pre data-v-7f15f443><code data-v-7f15f443>{
+  &quot;code&quot;: &quot;OK&quot;,
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: 12,
+      &quot;did&quot;: 3,
+      &quot;name&quot;: &quot;demo&quot;,
+      &quot;full_domain&quot;: &quot;demo.example.com&quot;,
+      &quot;status&quot;: 1,
+      &quot;domain&quot;: &quot;example.com&quot;,
+      &quot;record_types&quot;: [&quot;A&quot;, &quot;AAAA&quot;, &quot;CNAME&quot;, &quot;TXT&quot;],
+      &quot;record_count&quot;: 2
+    }
+  ]
+}</code></pre></section><section class="resource-card endpoint-panel" data-v-7f15f443><div class="endpoint-head" data-v-7f15f443><span class="method post" data-v-7f15f443>POST</span><strong data-v-7f15f443>/api/records</strong></div><p data-v-7f15f443>为已注册且审核通过的二级域名新增解析记录。</p><div class="doc-table" data-v-7f15f443><div data-v-7f15f443><strong data-v-7f15f443>subdomain_id</strong><span data-v-7f15f443>必填。来自二级域名列表的 <code data-v-7f15f443>id</code>。</span></div><div data-v-7f15f443><strong data-v-7f15f443>name</strong><span data-v-7f15f443>必填。主机记录，支持 <code data-v-7f15f443>@</code> 或相对前缀如 <code data-v-7f15f443>www</code>。</span></div><div data-v-7f15f443><strong data-v-7f15f443>type</strong><span data-v-7f15f443>必填。必须在该主域支持的 <code data-v-7f15f443>record_types</code> 内。</span></div><div data-v-7f15f443><strong data-v-7f15f443>value</strong><span data-v-7f15f443>必填。解析值，会按记录类型做后端校验。</span></div><div data-v-7f15f443><strong data-v-7f15f443>line_id</strong><span data-v-7f15f443>可选。默认传 <code data-v-7f15f443>0</code>。</span></div></div><pre data-v-7f15f443><code data-v-7f15f443>curl -X POST &quot;https://example.com/api/records&quot; \\
+  -H &quot;Authorization: Bearer $KLDNS_TOKEN&quot; \\
+  -H &quot;Content-Type: application/json&quot; \\
+  -d &#39;{&quot;subdomain_id&quot;:12,&quot;name&quot;:&quot;www&quot;,&quot;type&quot;:&quot;A&quot;,&quot;value&quot;:&quot;203.0.113.10&quot;,&quot;line_id&quot;:&quot;0&quot;}&#39;</code></pre><pre data-v-7f15f443><code data-v-7f15f443>{
+  &quot;code&quot;: &quot;OK&quot;,
+  &quot;data&quot;: { &quot;mode&quot;: &quot;direct&quot; }
+}</code></pre></section><section class="resource-card endpoint-panel" data-v-7f15f443><div class="endpoint-head" data-v-7f15f443><span class="method put" data-v-7f15f443>PUT</span><strong data-v-7f15f443>/api/records/:id</strong></div><p data-v-7f15f443>编辑当前账号名下的解析记录，不能跨二级域名修改归属。</p><pre data-v-7f15f443><code data-v-7f15f443>curl -X PUT &quot;https://example.com/api/records/25&quot; \\
+  -H &quot;Authorization: Bearer $KLDNS_TOKEN&quot; \\
+  -H &quot;Content-Type: application/json&quot; \\
+  -d &#39;{&quot;subdomain_id&quot;:12,&quot;name&quot;:&quot;www&quot;,&quot;type&quot;:&quot;A&quot;,&quot;value&quot;:&quot;203.0.113.20&quot;,&quot;line_id&quot;:&quot;0&quot;}&#39;</code></pre><pre data-v-7f15f443><code data-v-7f15f443>{
+  &quot;code&quot;: &quot;OK&quot;,
+  &quot;data&quot;: { &quot;mode&quot;: &quot;direct&quot; }
+}</code></pre></section><section class="resource-card endpoint-panel" data-v-7f15f443><div class="endpoint-head" data-v-7f15f443><span class="method delete" data-v-7f15f443>DELETE</span><strong data-v-7f15f443>/api/records/:id</strong></div><p data-v-7f15f443>删除当前账号名下的解析记录。删除会同步调用 DNS 平台，失败时不会写入本地成功状态。</p><pre data-v-7f15f443><code data-v-7f15f443>curl -X DELETE &quot;https://example.com/api/records/25&quot; \\
+  -H &quot;Authorization: Bearer $KLDNS_TOKEN&quot;</code></pre><pre data-v-7f15f443><code data-v-7f15f443>{
+  &quot;code&quot;: &quot;OK&quot;,
+  &quot;data&quot;: { &quot;mode&quot;: &quot;direct&quot; }
+}</code></pre></section>`,4)),o("section",k,[o("div",y,[a(d(T),{size:20}),t[10]||(t[10]=o("h2",null,"常见错误码",-1))]),t[11]||(t[11]=s('<div class="error-grid" data-v-7f15f443><span data-v-7f15f443>UNAUTHORIZED</span><p data-v-7f15f443>缺少 Token、Token 不存在或已过期。</p><span data-v-7f15f443>FORBIDDEN</span><p data-v-7f15f443>账号未审核、API Token 访问了不允许的接口，或记录类型不被主域支持。</p><span data-v-7f15f443>INVALID_ARGUMENT</span><p data-v-7f15f443>请求 JSON、主机记录、记录值或参数格式不正确。</p><span data-v-7f15f443>NOT_FOUND</span><p data-v-7f15f443>二级域名或解析记录不存在，或不属于当前账号。</p><span data-v-7f15f443>CONFLICT</span><p data-v-7f15f443>记录冲突，例如同名 CNAME 与其他类型冲突。</p><span data-v-7f15f443>DNS_PROVIDER_FAILED</span><p data-v-7f15f443>DNS 平台写入失败。</p></div>',1))])])}}}),C=m(I,[["__scopeId","data-v-7f15f443"]]);export{C as default};

@@ -1,0 +1,1 @@
+import{h as t}from"./index-CLvzR696.js";function o(i={}){return t.get("/domains",{params:i})}function s(){return t.get("/public/domains")}export{o as a,s as l};

@@ -1,0 +1,1 @@
+import{h as t}from"./index-CLvzR696.js";function n(){return t.get("/settings/dns-policy")}function s(){return t.get("/settings/turnstile")}export{n as a,s as g};
