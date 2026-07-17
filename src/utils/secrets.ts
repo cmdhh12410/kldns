@@ -1,39 +1,74 @@
-import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'crypto';
-
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = 'AES-GCM';
 const IV_LENGTH = 16;
-const AUTH_TAG_LENGTH = 16;
 
-export function encrypt(text: string, secretKey: string): string {
-  const key = createHash('sha256').update(secretKey).digest();
-  const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv(ALGORITHM, key, iv);
-  
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  
-  const authTag = cipher.getAuthTag();
-  
-  // Format: iv:authTag:encrypted
-  return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+async function getCryptoKey(secretKey: string): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secretKey);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', keyData);
+  return crypto.subtle.importKey(
+    'raw',
+    hashBuffer,
+    { name: ALGORITHM, length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
 }
 
-export function decrypt(encryptedText: string, secretKey: string): string {
+function bufferToHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function hexToBuffer(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+  return bytes;
+}
+
+export async function encrypt(text: string, secretKey: string): Promise<string> {
+  const key = await getCryptoKey(secretKey);
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const encoder = new TextEncoder();
+
+  const encrypted = await crypto.subtle.encrypt(
+    { name: ALGORITHM, iv },
+    key,
+    encoder.encode(text)
+  );
+
+  const encryptedArray = new Uint8Array(encrypted);
+  // Last 16 bytes are the auth tag in AES-GCM
+  const authTag = encryptedArray.slice(encryptedArray.length - 16);
+  const ciphertext = encryptedArray.slice(0, encryptedArray.length - 16);
+
+  return `${bufferToHex(iv)}:${bufferToHex(authTag)}:${bufferToHex(ciphertext)}`;
+}
+
+export async function decrypt(encryptedText: string, secretKey: string): Promise<string> {
   const parts = encryptedText.split(':');
   if (parts.length !== 3) {
     throw new Error('Invalid encrypted text format');
   }
-  
-  const [ivHex, authTagHex, encrypted] = parts;
-  const key = createHash('sha256').update(secretKey).digest();
-  const iv = Buffer.from(ivHex, 'hex');
-  const authTag = Buffer.from(authTagHex, 'hex');
-  
-  const decipher = createDecipheriv(ALGORITHM, key, iv);
-  decipher.setAuthTag(authTag);
-  
-  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  
-  return decrypted;
+
+  const [ivHex, authTagHex, ciphertextHex] = parts;
+  const key = await getCryptoKey(secretKey);
+  const iv = hexToBuffer(ivHex);
+  const authTag = hexToBuffer(authTagHex);
+  const ciphertext = hexToBuffer(ciphertextHex);
+
+  // Combine ciphertext + authTag for Web Crypto API
+  const combined = new Uint8Array(ciphertext.length + authTag.length);
+  combined.set(ciphertext);
+  combined.set(authTag, ciphertext.length);
+
+  const decrypted = await crypto.subtle.decrypt(
+    { name: ALGORITHM, iv },
+    key,
+    combined
+  );
+
+  return new TextDecoder().decode(decrypted);
 }

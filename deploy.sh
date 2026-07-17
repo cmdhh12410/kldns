@@ -100,10 +100,10 @@ D1_DB_ID=""
 
 # 尝试从 wrangler d1 list 获取现有数据库 ID
 log_info "检查 D1 数据库 '$D1_DB_NAME' 是否存在..."
-D1_LIST_OUTPUT=$(wrangler d1 list --output json 2>/dev/null || echo "[]")
+D1_LIST_OUTPUT=$(wrangler d1 list 2>&1)
 
-# 解析数据库 ID
-D1_DB_ID=$(echo "$D1_LIST_OUTPUT" | grep -o "\"uuid\":\"[^\"]*\"" | head -1 | cut -d'"' -f4)
+# Wrangler v4 输出表格格式，按名称匹配提取 UUID
+D1_DB_ID=$(echo "$D1_LIST_OUTPUT" | grep "$D1_DB_NAME" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
 
 if [ -n "$D1_DB_ID" ]; then
     log_success "D1 数据库已存在，ID: $D1_DB_ID"
@@ -118,8 +118,8 @@ else
     if [ -z "$D1_DB_ID" ]; then
         # 再次尝试从 list 获取
         sleep 2
-        D1_LIST_OUTPUT=$(wrangler d1 list --output json 2>/dev/null || echo "[]")
-        D1_DB_ID=$(echo "$D1_LIST_OUTPUT" | grep -o "\"uuid\":\"[^\"]*\"" | head -1 | cut -d'"' -f4)
+        D1_LIST_OUTPUT=$(wrangler d1 list 2>&1)
+        D1_DB_ID=$(echo "$D1_LIST_OUTPUT" | grep "$D1_DB_NAME" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
     fi
 
     if [ -z "$D1_DB_ID" ]; then
@@ -156,18 +156,18 @@ log_step "Step 3/8: 配置 KV 命名空间"
 
 KV_NS_ID=""
 
-# 尝试从 wrangler kv:namespace list 获取现有命名空间 ID
+# 尝试从 wrangler kv namespace list 获取现有命名空间 ID
 log_info "检查 KV 命名空间 '$KV_NAMESPACE_NAME' 是否存在..."
-KV_LIST_OUTPUT=$(wrangler kv:namespace list --output json 2>/dev/null || echo "[]")
+KV_LIST_OUTPUT=$(wrangler kv namespace list 2>&1)
 
-# 解析命名空间 ID（查找 title 匹配的）
-KV_NS_ID=$(echo "$KV_LIST_OUTPUT" | grep -B5 "\"title\":\"$KV_NAMESPACE_NAME\"" | grep -o "\"id\":\"[^\"]*\"" | cut -d'"' -f4)
+# KV namespace list 返回 JSON 格式，提取匹配的 title 对应的 id
+KV_NS_ID=$(echo "$KV_LIST_OUTPUT" | grep -B 2 "\"title\": \"$KV_NAMESPACE_NAME\"" | grep "\"id\":" | grep -oE '[0-9a-f]{32}' | head -1)
 
 if [ -n "$KV_NS_ID" ]; then
     log_success "KV 命名空间已存在，ID: $KV_NS_ID"
 else
     log_info "KV 命名空间不存在，正在创建..."
-    CREATE_OUTPUT=$(wrangler kv:namespace create "$KV_NAMESPACE_NAME" 2>&1)
+    CREATE_OUTPUT=$(wrangler kv namespace create "$KV_NAMESPACE_NAME" 2>&1)
     echo "$CREATE_OUTPUT"
 
     # 从输出中提取命名空间 ID
@@ -176,12 +176,12 @@ else
     if [ -z "$KV_NS_ID" ]; then
         # 再次尝试从 list 获取
         sleep 2
-        KV_LIST_OUTPUT=$(wrangler kv:namespace list --output json 2>/dev/null || echo "[]")
-        KV_NS_ID=$(echo "$KV_LIST_OUTPUT" | grep -B5 "\"title\":\"$KV_NAMESPACE_NAME\"" | grep -o "\"id\":\"[^\"]*\"" | cut -d'"' -f4)
+        KV_LIST_OUTPUT=$(wrangler kv namespace list 2>&1)
+        KV_NS_ID=$(echo "$KV_LIST_OUTPUT" | grep "$KV_NAMESPACE_NAME" | grep -oE '[0-9a-f]{32}' | head -1)
     fi
 
     if [ -z "$KV_NS_ID" ]; then
-        log_error "无法获取 KV 命名空间 ID，请手动创建: wrangler kv:namespace create $KV_NAMESPACE_NAME"
+        log_error "无法获取 KV 命名空间 ID，请手动创建: wrangler kv namespace create $KV_NAMESPACE_NAME"
         exit 1
     fi
 

@@ -331,17 +331,21 @@ export class APIController {
 }
 
 function newAPIToken() {
-  const crypto = require('crypto');
-  const randomBytes = crypto.randomBytes(32).toString('hex');
+  const randomBytes = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
   const plain = `kldns_${randomBytes}`;
   const hash = hashBearerToken(plain);
   const hint = tokenHint(plain);
   return { plain, hash, hint };
 }
 
-function hashBearerToken(token: string): string {
-  const crypto = require('crypto');
-  return crypto.createHash('sha256').update(token).digest('hex');
+async function hashBearerToken(token: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(token.trim()));
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 function tokenHint(token: string): string {

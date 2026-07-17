@@ -1,18 +1,18 @@
 name = "kldns-workers"
 main = "src/index.ts"
-compatibility_date = "2024-06-20"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 # D1 数据库绑定
 [[d1_databases]]
 binding = "DB"
 database_name = "kldns-db"
-database_id = "your-database-id-here"
+database_id = "d6ec1c0d-0c1e-4b76-886d-48517becd676"
 
 # KV 命名空间绑定
 [[kv_namespaces]]
 binding = "KV"
-id = "your-kv-namespace-id-here"
+id = "0c18af9cfa804fa587589f2441f1671d"
 
 # 环境变量
 [vars]
