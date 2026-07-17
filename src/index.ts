@@ -6,17 +6,6 @@ export type { Env };
 const app = createRouter();
 
 app.all('*', async (c) => {
-  const url = new URL(c.req.url);
-  const accept = c.req.header('Accept') || '';
-
-  if (c.req.method === 'GET' && accept.includes('text/html')) {
-    const indexUrl = new URL('/index.html', c.req.url).toString();
-    const res = await fetch(indexUrl, c.req.raw);
-    if (res.ok) {
-      return res;
-    }
-  }
-
   return c.json({ code: 'NOT_FOUND', message: 'Not Found' }, 404);
 });
 

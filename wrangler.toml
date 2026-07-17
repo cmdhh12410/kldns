@@ -22,6 +22,7 @@ APP_MODE = "production"
 # 静态资源 (Assets 模式 - Wrangler v3 推荐)
 [assets]
 directory = "./web/dist"
+not_found_handling = "single-page-application"
 
 # 构建配置
 [build]
