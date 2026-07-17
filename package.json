@@ -1,0 +1,23 @@
+{
+  "name": "kldns-workers",
+  "version": "1.0.5",
+  "description": "KLDNS - 二级域名分发和 DNS 解析管理系统 (Cloudflare Workers 版本)",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 execute kldns-db --local --file=./migrations/0001_initial_schema.sql",
+    "db:migrate:prod": "wrangler d1 execute kldns-db --remote --file=./migrations/0001_initial_schema.sql",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "build:frontend": "cd web && npm run build"
+  },
+  "dependencies": {
+    "hono": "^4.4.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "typescript": "^5.5.0",
+    "wrangler": "^3.60.0"
+  }
+}

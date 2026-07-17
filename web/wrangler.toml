@@ -1,0 +1,10 @@
+name = "kldns-web"
+compatibility_date = "2025-01-01"
+
+[site]
+bucket = "./dist"
+
+[env.production]
+routes = [
+  { pattern = "kldns.example.com/*", zone_name = "example.com" }
+]

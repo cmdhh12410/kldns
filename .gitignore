@@ -11,3 +11,6 @@ web/tsconfig.tsbuildinfo
 .playwright-mcp/
 outputs/
 AGENTS.md
+.env
+.dev.vars
+node_modules/

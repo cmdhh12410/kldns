@@ -1,0 +1,24 @@
+# KLDNS Workers 本地开发环境变量配置
+# 复制此文件为 .dev.vars 并填入实际值
+
+# 应用配置
+APP_NAME=kldns
+APP_MODE=development
+
+# 安全密钥（生产环境必须更换为随机字符串）
+SECRET_KEY=change-me-before-production-kldns-secret
+
+# Cloudflare D1 数据库 ID（本地开发使用 wrangler 自动创建）
+# 运行: wrangler d1 create kldns-db
+# 然后将返回的 database_id 填入 wrangler.toml
+
+# Cloudflare KV 命名空间 ID（本地开发使用 wrangler 自动创建）
+# 运行: wrangler kv:namespace create KV
+# 然后将返回的 id 填入 wrangler.toml
+
+# Turnstile 验证码配置（可选）
+# TURNSTILE_SITE_KEY=your-turnstile-site-key
+# TURNSTILE_SECRET_KEY=your-turnstile-secret-key
+
+# DNS 提供商加密密钥（可选，用于加密 DNS 提供商凭据）
+# DNS_ENCRYPTION_KEY=your-32-byte-hex-encryption-key

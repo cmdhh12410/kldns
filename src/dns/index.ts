@@ -1,0 +1,13 @@
+export * from './provider';
+export * from './registry';
+import './providers/cloudflare';
+import './providers/dnspod';
+import './providers/aliyun';
+import './providers/dnscom';
+import './providers/dnsla';
+import './providers/dnsdun';
+import './providers/west';
+import './providers/huawei';
+import './providers/baidu';
+import './providers/route53';
+import './providers/google';
