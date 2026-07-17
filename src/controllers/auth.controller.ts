@@ -57,7 +57,8 @@ export class AuthController {
   async login(c: Context) {
     try {
       const body = await c.req.json();
-      const { username, password } = body;
+      const username = body.username || body.login;
+      const password = body.password;
 
       if (!username || !password) {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing username or password' }, 400);
