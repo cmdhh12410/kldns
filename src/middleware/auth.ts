@@ -20,10 +20,10 @@ export function authMiddleware(db: Database) {
     }
 
     const token = authHeader.substring(7);
-    const tokenHash = hashBearerToken(token);
+    const tokenHash = await hashBearerToken(token);
 
     const apiRepo = new APIRepository(db);
-    
+
     let authResult = await apiRepo.authenticateSession(tokenHash);
     let source: 'session' | 'token' = 'session';
     
