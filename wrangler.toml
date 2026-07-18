@@ -14,6 +14,7 @@ database_id = "d6ec1c0d-0c1e-4b76-886d-48517becd676"
 [[kv_namespaces]]
 binding = "KV"
 id = "0c18af9cfa804fa587589f2441f1671d"
+preview_id = "4b02254aa71d4e7ea6029c08fe741c7b"
 
 # 环境变量
 [vars]

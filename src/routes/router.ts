@@ -364,5 +364,27 @@ export function createRouter(): Hono<{ Bindings: Env }> {
 
   app.route('/api/admin', admin);
 
+  // SPA fallback - serve index.html for all non-API GET requests
+  app.get('*', async (c) => {
+    const accept = c.req.header('Accept') || '';
+    if (!accept.includes('text/html')) {
+      return c.json({ code: 'NOT_FOUND', message: 'Not Found' }, 404);
+    }
+    if (c.env.ASSETS) {
+      const indexUrl = new URL('/index.html', c.req.url);
+      const response = await c.env.ASSETS.fetch(new Request(indexUrl, c.req.raw));
+      if (response.status === 200) return response;
+    }
+    if (c.env.__STATIC_CONTENT) {
+      const indexHtml = await c.env.__STATIC_CONTENT.get('index.html');
+      if (indexHtml) {
+        return new Response(indexHtml, {
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        });
+      }
+    }
+    return c.json({ code: 'NOT_FOUND', message: 'Not Found' }, 404);
+  });
+
   return app;
 }
