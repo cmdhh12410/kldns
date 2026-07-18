@@ -283,13 +283,13 @@ export function createRouter(): Hono<{ Bindings: Env }> {
   admin.get('/dns-providers', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.admin.getDomains(c);
+    return controllers.admin.getProviders(c);
   });
 
   admin.post('/dns-providers/zones', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.admin.createDomain(c);
+    return controllers.admin.getProviderZones(c);
   });
 
   // Record management

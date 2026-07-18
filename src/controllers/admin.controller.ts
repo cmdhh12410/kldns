@@ -2,6 +2,7 @@ import { Context } from 'hono';
 import { Database, AdminRepository, PointsRepository } from '../repositories';
 import { PointsService } from '../services';
 import { getAuth } from '../middleware/auth';
+import { getRegisteredKeys, getProvider, Provider, Zone } from '../dns';
 
 export class AdminController {
   constructor(private db: Database) {}
@@ -289,6 +290,58 @@ export class AdminController {
     } catch (error) {
       console.error('Get operation logs error:', error);
       return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get operation logs' }, 500);
+    }
+  }
+
+  async getProviders(c: Context) {
+    try {
+      const keys = getRegisteredKeys();
+      const providers = keys.map(key => {
+        const provider = getProvider(key);
+        if (!provider) return null;
+        return {
+          key: provider.key(),
+          label: provider.label(),
+          fields: provider.configFields()
+        };
+      }).filter(Boolean);
+
+      return c.json({
+        code: 'OK',
+        message: 'Success',
+        data: providers
+      });
+    } catch (error) {
+      console.error('Get providers error:', error);
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get providers' }, 500);
+    }
+  }
+
+  async getProviderZones(c: Context) {
+    try {
+      const body = await c.req.json();
+      const { key, config } = body;
+
+      if (!key || !config) {
+        return c.json({ code: 'INVALID_INPUT', message: 'Missing key or config' }, 400);
+      }
+
+      const provider = getProvider(key);
+      if (!provider) {
+        return c.json({ code: 'PROVIDER_NOT_FOUND', message: 'Provider not found' }, 404);
+      }
+
+      provider.configure(config);
+      const zones = await provider.listZones();
+
+      return c.json({
+        code: 'OK',
+        message: 'Success',
+        data: zones
+      });
+    } catch (error: any) {
+      console.error('Get provider zones error:', error);
+      return c.json({ code: 'INTERNAL_ERROR', message: error.message || 'Failed to get zones' }, 500);
     }
   }
 }
