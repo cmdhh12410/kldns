@@ -147,7 +147,7 @@ export class APIRepository {
       params.push(kw, kw, kw, kw, kw);
     }
     
-    query += ` GROUP BY s.id ORDER BY s.id DESC`;
+    query += ` GROUP BY s.id, d.id ORDER BY s.id DESC`;
     
     return await this.db.query(query, params);
   }

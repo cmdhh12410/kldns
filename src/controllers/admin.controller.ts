@@ -10,8 +10,10 @@ export class AdminController {
   async getUsers(c: Context) {
     try {
       const adminRepo = new AdminRepository(this.db);
-      const limit = parseInt(c.req.query('limit') || '100');
-      const offset = parseInt(c.req.query('offset') || '0');
+      const page = parseInt(c.req.query('page') || '1');
+      const page_size = parseInt(c.req.query('page_size') || c.req.query('limit') || '100');
+      const limit = page_size;
+      const offset = (page - 1) * page_size;
       
       const users = await adminRepo.getUsers(limit, offset);
       const count = await adminRepo.getUsersCount();
@@ -19,7 +21,12 @@ export class AdminController {
       return c.json({
         code: 'OK',
         message: 'Success',
-        data: { users, count }
+        data: {
+          items: users,
+          total: count,
+          page,
+          page_size
+        }
       });
     } catch (error) {
       console.error('Get users error:', error);
@@ -137,19 +144,94 @@ export class AdminController {
     }
   }
 
-  async getDomains(c: Context) {
+  async getGroups(c: Context) {
     try {
       const adminRepo = new AdminRepository(this.db);
-      const limit = parseInt(c.req.query('limit') || '100');
-      const offset = parseInt(c.req.query('offset') || '0');
-      
-      const domains = await adminRepo.getDomains(limit, offset);
-      const count = await adminRepo.getDomainsCount();
+      const groups = await adminRepo.getGroups();
       
       return c.json({
         code: 'OK',
         message: 'Success',
-        data: { domains, count }
+        data: groups
+      });
+    } catch (error) {
+      console.error('Get groups error:', error);
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get groups' }, 500);
+    }
+  }
+
+  async createGroup(c: Context) {
+    try {
+      const body = await c.req.json();
+      const { name } = body;
+
+      if (!name) {
+        return c.json({ code: 'INVALID_INPUT', message: 'Missing required fields' }, 400);
+      }
+
+      const adminRepo = new AdminRepository(this.db);
+      const groupId = await adminRepo.createGroup(name);
+
+      return c.json({
+        code: 'OK',
+        message: 'Group created successfully',
+        data: { id: groupId }
+      }, 201);
+    } catch (error) {
+      console.error('Create group error:', error);
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to create group' }, 500);
+    }
+  }
+
+  async deleteGroup(c: Context) {
+    try {
+      const id = c.req.param('id');
+      
+      if (!id) {
+        return c.json({ code: 'INVALID_INPUT', message: 'Missing group ID' }, 400);
+      }
+
+      const adminRepo = new AdminRepository(this.db);
+      await adminRepo.deleteGroup(parseInt(id));
+
+      return c.json({
+        code: 'OK',
+        message: 'Group deleted successfully'
+      });
+    } catch (error) {
+      console.error('Delete group error:', error);
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to delete group' }, 500);
+    }
+  }
+
+  async getDomains(c: Context) {
+    try {
+      const adminRepo = new AdminRepository(this.db);
+      const page = parseInt(c.req.query('page') || '1');
+      const page_size = parseInt(c.req.query('page_size') || c.req.query('limit') || '100');
+      const limit = page_size;
+      const offset = (page - 1) * page_size;
+      
+      const domains = await adminRepo.getDomains(limit, offset);
+      const count = await adminRepo.getDomainsCount();
+      
+      const domainsWithLabel = domains.map(domain => {
+        const provider = getProvider(domain.provider_key);
+        return {
+          ...domain,
+          provider_label: provider ? provider.label() : domain.provider_key
+        };
+      });
+      
+      return c.json({
+        code: 'OK',
+        message: 'Success',
+        data: {
+          items: domainsWithLabel,
+          total: count,
+          page,
+          page_size
+        }
       });
     } catch (error) {
       console.error('Get domains error:', error);
@@ -235,8 +317,10 @@ export class AdminController {
   async getSubdomains(c: Context) {
     try {
       const adminRepo = new AdminRepository(this.db);
-      const limit = parseInt(c.req.query('limit') || '100');
-      const offset = parseInt(c.req.query('offset') || '0');
+      const page = parseInt(c.req.query('page') || '1');
+      const page_size = parseInt(c.req.query('page_size') || c.req.query('limit') || '100');
+      const limit = page_size;
+      const offset = (page - 1) * page_size;
       const status = c.req.query('status') ? parseInt(c.req.query('status')!) : undefined;
       
       const subdomains = await adminRepo.getSubdomains(limit, offset, status);
@@ -245,7 +329,12 @@ export class AdminController {
       return c.json({
         code: 'OK',
         message: 'Success',
-        data: { subdomains, count }
+        data: {
+          items: subdomains,
+          total: count,
+          page,
+          page_size
+        }
       });
     } catch (error) {
       console.error('Get subdomains error:', error);
@@ -256,8 +345,10 @@ export class AdminController {
   async getRecords(c: Context) {
     try {
       const adminRepo = new AdminRepository(this.db);
-      const limit = parseInt(c.req.query('limit') || '100');
-      const offset = parseInt(c.req.query('offset') || '0');
+      const page = parseInt(c.req.query('page') || '1');
+      const page_size = parseInt(c.req.query('page_size') || c.req.query('limit') || '100');
+      const limit = page_size;
+      const offset = (page - 1) * page_size;
       
       const records = await adminRepo.getRecords(limit, offset);
       const count = await adminRepo.getRecordsCount();
@@ -265,7 +356,12 @@ export class AdminController {
       return c.json({
         code: 'OK',
         message: 'Success',
-        data: { records, count }
+        data: {
+          items: records,
+          total: count,
+          page,
+          page_size
+        }
       });
     } catch (error) {
       console.error('Get records error:', error);
@@ -276,8 +372,10 @@ export class AdminController {
   async getOperationLogs(c: Context) {
     try {
       const adminRepo = new AdminRepository(this.db);
-      const limit = parseInt(c.req.query('limit') || '100');
-      const offset = parseInt(c.req.query('offset') || '0');
+      const page = parseInt(c.req.query('page') || '1');
+      const page_size = parseInt(c.req.query('page_size') || c.req.query('limit') || '100');
+      const limit = page_size;
+      const offset = (page - 1) * page_size;
       
       const logs = await adminRepo.getOperationLogs(limit, offset);
       const count = await adminRepo.getOperationLogsCount();
@@ -285,7 +383,12 @@ export class AdminController {
       return c.json({
         code: 'OK',
         message: 'Success',
-        data: { logs, count }
+        data: {
+          items: logs,
+          total: count,
+          page,
+          page_size
+        }
       });
     } catch (error) {
       console.error('Get operation logs error:', error);

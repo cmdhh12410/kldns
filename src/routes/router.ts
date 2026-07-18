@@ -233,19 +233,19 @@ export function createRouter(): Hono<{ Bindings: Env }> {
   admin.get('/groups', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.admin.getUsers(c);
+    return controllers.admin.getGroups(c);
   });
 
   admin.post('/groups', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.admin.createUser(c);
+    return controllers.admin.createGroup(c);
   });
 
   admin.delete('/groups/:id', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.admin.deleteUser(c);
+    return controllers.admin.deleteGroup(c);
   });
 
   // Domain management
@@ -367,13 +367,24 @@ export function createRouter(): Hono<{ Bindings: Env }> {
   // SPA fallback - serve index.html for all non-API GET requests
   app.get('*', async (c) => {
     const accept = c.req.header('Accept') || '';
-    if (!accept.includes('text/html')) {
+    const userAgent = c.req.header('User-Agent') || '';
+    const isHtmlRequest = accept.includes('text/html') || 
+                          accept.includes('*/*') || 
+                          userAgent.includes('Mozilla');
+    if (!isHtmlRequest) {
       return c.json({ code: 'NOT_FOUND', message: 'Not Found' }, 404);
     }
     if (c.env.ASSETS) {
       const indexUrl = new URL('/index.html', c.req.url);
       const response = await c.env.ASSETS.fetch(new Request(indexUrl, c.req.raw));
-      if (response.status === 200) return response;
+      if (response.status === 200) {
+        return new Response(response.body, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+          },
+        });
+      }
     }
     if (c.env.__STATIC_CONTENT) {
       const indexHtml = await c.env.__STATIC_CONTENT.get('index.html');
@@ -383,7 +394,10 @@ export function createRouter(): Hono<{ Bindings: Env }> {
         });
       }
     }
-    return c.json({ code: 'NOT_FOUND', message: 'Not Found' }, 404);
+    return c.html(
+      '<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="icon" href="/favicon.svg" type="image/svg+xml" /><title>KLDNS</title><script type="module" crossorigin src="/assets/index-CLvzR696.js"></script><link rel="stylesheet" crossorigin href="/assets/index-B0sePWi5.css"></head><body><div id="app"></div></body></html>',
+      200
+    );
   });
 
   return app;

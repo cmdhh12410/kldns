@@ -78,13 +78,31 @@ export class AdminRepository {
     await this.db.execute('DELETE FROM users WHERE id = ? AND id != 0', [id]);
   }
 
+  async getGroups(): Promise<any[]> {
+    return await this.db.query(
+      `SELECT id, name, created_at
+       FROM groups
+       ORDER BY id ASC`
+    );
+  }
+
+  async createGroup(name: string): Promise<number> {
+    const result = await this.db.execute(
+      `INSERT INTO groups (name) VALUES (?)`,
+      [name]
+    );
+    return result.meta.last_row_id;
+  }
+
+  async deleteGroup(id: number): Promise<void> {
+    await this.db.execute('DELETE FROM groups WHERE id = ?', [id]);
+  }
+
   async getDomains(limit: number = 100, offset: number = 0): Promise<any[]> {
     return await this.db.query(
       `SELECT d.id, d.domain, d.points_cost, d.record_types, d.beian, d.require_review,
-              d.description, d.provider_key, d.remote_zone_id, d.created_at,
-              p.label as provider_label
+              d.description, d.provider_key, d.remote_zone_id, d.created_at
        FROM domains d
-       LEFT JOIN dns_providers p ON p.key = d.provider_key
        ORDER BY d.id DESC
        LIMIT ? OFFSET ?`,
       [limit, offset]
@@ -186,10 +204,12 @@ export class AdminRepository {
   async getSubdomains(limit: number = 100, offset: number = 0, status?: number): Promise<any[]> {
     let query = `SELECT s.id, s.uid, s.did, s.name, s.full_domain, s.status, s.purpose,
                         s.reject_reason, s.reviewed_by, s.reviewed_at, s.created_at,
-                        u.username, d.domain
+                        u.username, d.domain, d.points_cost as registration_cost,
+                        COUNT(r.id) as record_count
                  FROM subdomains s
                  LEFT JOIN users u ON u.id = s.uid
-                 LEFT JOIN domains d ON d.id = s.did`;
+                 LEFT JOIN domains d ON d.id = s.did
+                 LEFT JOIN records r ON r.subdomain_id = s.id`;
     
     const values: any[] = [];
     
@@ -198,7 +218,7 @@ export class AdminRepository {
       values.push(status);
     }
     
-    query += ' ORDER BY s.id DESC LIMIT ? OFFSET ?';
+    query += ' GROUP BY s.id, u.id, d.id ORDER BY s.id DESC LIMIT ? OFFSET ?';
     values.push(limit, offset);
     
     return await this.db.query(query, values);
