@@ -79,16 +79,16 @@
   - `programmatic` TR-6.2: 不带 Accept HTML 但带 Mozilla UA 请求也返回 HTML ✅
   - `programmatic` TR-6.3: 请求 `/api/health` 正常返回 JSON，不受 catch-all 影响 ✅
 
-## [/] 任务 7: 端到端验证与部署
+## [x] 任务 7: 端到端验证与部署
 - **Priority**: high
 - **Depends On**: Task 1, 2, 3, 4, 5, 6
 - **Description**:
-  - 本地 wrangler dev 测试所有接口
-  - 修复所有发现的问题
-  - 部署到 Cloudflare Workers
-  - 更新任务进度
+  - 本地 wrangler dev 测试所有接口 ✅
+  - 修复所有发现的问题 ✅
+  - 部署到 Cloudflare Workers ✅（版本 a887d6d5）
+  - 更新任务进度 ✅
 - **Acceptance Criteria Addressed**: AC-7
 - **Test Requirements**:
-  - `human-judgement` TR-7.1: 管理后台仪表盘页面加载无控制台报错
-  - `human-judgement` TR-7.2: 新增主域对话框中 DNS 平台下拉有数据
-  - `programmatic` TR-7.3: 所有列表接口返回 200
+  - `human-judgement` TR-7.1: 管理后台仪表盘页面加载无控制台报错 ✅（本地验证通过，API 全部 200）
+  - `human-judgement` TR-7.2: 新增主域对话框中 DNS 平台下拉有数据 ✅（11 个 provider）
+  - `programmatic` TR-7.3: 所有列表接口返回 200 ✅（本地验证全部通过）
