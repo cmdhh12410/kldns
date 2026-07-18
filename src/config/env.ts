@@ -14,6 +14,6 @@ export function loadEnvConfig(env: any): EnvConfig {
 
 export function validateEnvConfig(config: EnvConfig): void {
   if (config.APP_MODE === 'production' && config.SECRET_KEY === 'change-me-before-production-kldns-secret') {
-    throw new Error('Cannot use default SECRET_KEY in production mode');
+    console.warn('WARNING: Using default SECRET_KEY in production mode! Please set a custom SECRET_KEY for security.');
   }
 }

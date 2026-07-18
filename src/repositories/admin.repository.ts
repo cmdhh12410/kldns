@@ -101,7 +101,8 @@ export class AdminRepository {
   async getDomains(limit: number = 100, offset: number = 0): Promise<any[]> {
     return await this.db.query(
       `SELECT d.id, d.domain, d.points_cost, d.record_types, d.beian, d.require_review,
-              d.description, d.provider_key, d.remote_zone_id, d.created_at
+              d.description, d.provider_key, d.remote_zone_id, d.created_at, d.group_policy,
+              CASE WHEN d.provider_config_ciphertext IS NOT NULL AND d.provider_config_ciphertext != '' THEN 1 ELSE 0 END as provider_config_stored
        FROM domains d
        ORDER BY d.id DESC
        LIMIT ? OFFSET ?`,
@@ -124,12 +125,19 @@ export class AdminRepository {
     recordTypes: string = 'A,CNAME',
     beian: number = 0,
     requireReview: number = 0,
-    description: string = ''
+    description: string = '',
+    providerConfigCiphertext: string = '',
+    groupPolicy: string = '0'
   ): Promise<number> {
+    await this.db.execute(
+      `INSERT OR IGNORE INTO dns_providers (key, config_ciphertext) VALUES (?, '')`,
+      [providerKey]
+    );
+
     const result = await this.db.execute(
-      `INSERT INTO domains (domain, provider_key, remote_zone_id, points_cost, record_types, beian, require_review, description)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [domain, providerKey, remoteZoneId, pointsCost, recordTypes, beian, requireReview, description]
+      `INSERT INTO domains (domain, provider_key, remote_zone_id, points_cost, record_types, beian, require_review, description, provider_config_ciphertext, group_policy)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [domain, providerKey, remoteZoneId, pointsCost, recordTypes, beian, requireReview, description, providerConfigCiphertext, groupPolicy]
     );
     return result.meta.last_row_id;
   }
@@ -161,27 +169,23 @@ export class AdminRepository {
 
   async getProviders(): Promise<any[]> {
     return await this.db.query(
-      `SELECT key, label, config_ciphertext, created_at, updated_at
+      `SELECT key, config_ciphertext, created_at, updated_at
        FROM dns_providers
        ORDER BY key ASC`
     );
   }
 
-  async createProvider(key: string, label: string, configCiphertext: string): Promise<void> {
+  async createProvider(key: string, configCiphertext: string): Promise<void> {
     await this.db.execute(
-      `INSERT INTO dns_providers (key, label, config_ciphertext) VALUES (?, ?, ?)`,
-      [key, label, configCiphertext]
+      `INSERT INTO dns_providers (key, config_ciphertext) VALUES (?, ?)`,
+      [key, configCiphertext]
     );
   }
 
-  async updateProvider(key: string, updates: { label?: string; config_ciphertext?: string }): Promise<void> {
+  async updateProvider(key: string, updates: { config_ciphertext?: string }): Promise<void> {
     const sets: string[] = [];
     const values: any[] = [];
     
-    if (updates.label !== undefined) {
-      sets.push('label = ?');
-      values.push(updates.label);
-    }
     if (updates.config_ciphertext !== undefined) {
       sets.push('config_ciphertext = ?');
       values.push(updates.config_ciphertext);

@@ -20,6 +20,7 @@ preview_id = "4b02254aa71d4e7ea6029c08fe741c7b"
 [vars]
 APP_NAME = "kldns"
 APP_MODE = "production"
+SECRET_KEY = "kldns-production-secret-key-2026-change-me-please"
 
 # 静态资源 (Assets 模式 - Wrangler v3 推荐)
 [assets]

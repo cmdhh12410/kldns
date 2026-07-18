@@ -3,6 +3,8 @@ import { Database, AdminRepository, PointsRepository } from '../repositories';
 import { PointsService } from '../services';
 import { getAuth } from '../middleware/auth';
 import { getRegisteredKeys, getProvider, Provider, Zone } from '../dns';
+import { encrypt } from '../utils/secrets';
+import { loadEnvConfig } from '../config/env';
 
 export class AdminController {
   constructor(private db: Database) {}
@@ -242,10 +244,18 @@ export class AdminController {
   async createDomain(c: Context) {
     try {
       const body = await c.req.json();
-      const { domain, provider_key, remote_zone_id, points_cost, record_types, beian, require_review, description } = body;
+      const { domain, provider_key, remote_zone_id, points_cost, record_types, beian, require_review, description, provider_config, group_policy } = body;
 
       if (!domain || !provider_key || !remote_zone_id) {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing required fields' }, 400);
+      }
+
+      const envConfig = loadEnvConfig(c.env);
+      const recordTypesStr = Array.isArray(record_types) ? record_types.join(',') : (record_types || 'A,CNAME');
+
+      let providerConfigCiphertext = '';
+      if (provider_config && Object.keys(provider_config).length > 0) {
+        providerConfigCiphertext = await encrypt(JSON.stringify(provider_config), envConfig.SECRET_KEY);
       }
 
       const adminRepo = new AdminRepository(this.db);
@@ -254,10 +264,12 @@ export class AdminController {
         provider_key,
         remote_zone_id,
         points_cost || 0,
-        record_types || 'A,CNAME',
+        recordTypesStr,
         beian || 0,
         require_review || 0,
-        description || ''
+        description || '',
+        providerConfigCiphertext,
+        group_policy || '0'
       );
 
       return c.json({
@@ -280,8 +292,26 @@ export class AdminController {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing domain ID' }, 400);
       }
 
+      const updates: any = {};
+      if (body.domain !== undefined) updates.domain = body.domain;
+      if (body.points_cost !== undefined) updates.points_cost = body.points_cost;
+      if (body.beian !== undefined) updates.beian = body.beian;
+      if (body.require_review !== undefined) updates.require_review = body.require_review;
+      if (body.description !== undefined) updates.description = body.description;
+      if (body.group_policy !== undefined) updates.group_policy = body.group_policy;
+      if (body.record_types !== undefined) {
+        updates.record_types = Array.isArray(body.record_types)
+          ? body.record_types.join(',')
+          : body.record_types;
+      }
+
+      if (body.provider_config && Object.keys(body.provider_config).length > 0) {
+        const envConfig = loadEnvConfig(c.env);
+        updates.provider_config_ciphertext = await encrypt(JSON.stringify(body.provider_config), envConfig.SECRET_KEY);
+      }
+
       const adminRepo = new AdminRepository(this.db);
-      await adminRepo.updateDomain(parseInt(id), body);
+      await adminRepo.updateDomain(parseInt(id), updates);
 
       return c.json({
         code: 'OK',
