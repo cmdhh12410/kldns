@@ -30,9 +30,8 @@ export class AdminController {
           page_size
         }
       });
-    } catch (error) {
-      console.error('Get users error:', error);
-      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get users' }, 500);
+    } catch (error: any) {
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get users: ' + (error?.message || String(error)) }, 500);
     }
   }
 
@@ -235,9 +234,8 @@ export class AdminController {
           page_size
         }
       });
-    } catch (error) {
-      console.error('Get domains error:', error);
-      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get domains' }, 500);
+    } catch (error: any) {
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get domains: ' + (error?.message || String(error)) }, 500);
     }
   }
 
@@ -446,9 +444,11 @@ export class AdminController {
           page_size
         }
       });
-    } catch (error) {
-      console.error('Get subdomains error:', error);
-      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get subdomains' }, 500);
+    } catch (error: any) {
+      return c.json({ 
+        code: 'INTERNAL_ERROR', 
+        message: 'Failed to get subdomains: ' + (error?.message || String(error)) 
+      }, 500);
     }
   }
 
@@ -456,15 +456,13 @@ export class AdminController {
     try {
       const adminRepo = new AdminRepository(this.db);
       const page = parseInt(c.req.query('page') || '1');
-      const page_size = parseInt(c.req.query('page_size') || c.req.query('limit') || '100');
-      const limit = page_size;
-      const offset = (page - 1) * page_size;
-      
-      console.log('[Admin getRecords] query:', c.req.query(), 'limit:', limit, 'offset:', offset);
+      const pageSize = parseInt(c.req.query('page_size') || c.req.query('limit') || '100');
+      const limit = pageSize;
+      const offset = (page - 1) * pageSize;
+
       const records = await adminRepo.getRecords(limit, offset);
       const count = await adminRepo.getRecordsCount();
-      console.log('[Admin getRecords] count:', count, 'records returned:', records.length);
-      
+
       return c.json({
         code: 'OK',
         message: 'Success',
@@ -472,12 +470,11 @@ export class AdminController {
           items: records,
           total: count,
           page,
-          page_size
+          page_size: pageSize
         }
       });
-    } catch (error) {
-      console.error('Get records error:', error);
-      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get records' }, 500);
+    } catch (error: any) {
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get records: ' + (error?.message || String(error)) }, 500);
     }
   }
 
