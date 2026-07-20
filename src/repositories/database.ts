@@ -25,15 +25,10 @@ export class Database {
   }
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
-    await this.execute('BEGIN TRANSACTION');
-    try {
-      const result = await fn(this);
-      await this.execute('COMMIT');
-      return result;
-    } catch (error) {
-      await this.execute('ROLLBACK');
-      throw error;
-    }
+    return await this.db.transaction(async (tx) => {
+      const txDb = new Database(tx as D1Database);
+      return await fn(txDb);
+    });
   }
 
   getD1(): D1Database {
