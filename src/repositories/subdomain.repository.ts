@@ -111,6 +111,14 @@ export class SubdomainRepository {
     return result?.count || 0;
   }
 
+  async existsByName(did: number, name: string): Promise<boolean> {
+    const result = await this.db.queryOne<{ count: number }>(
+      `SELECT COUNT(1) as count FROM subdomains WHERE did = ? AND name = ?`,
+      [did, name]
+    );
+    return (result?.count || 0) > 0;
+  }
+
   private async deductPoints(db: Database, uid: number, points: number, remark: string): Promise<void> {
     const user = await db.queryOne<{ points: number }>(`SELECT points FROM users WHERE id = ?`, [uid]);
     if (!user || user.points < points) throw new Error('Insufficient points');

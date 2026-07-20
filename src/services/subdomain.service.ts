@@ -33,6 +33,11 @@ export class SubdomainService {
       throw new Error('This subdomain name is reserved');
     }
 
+    const exists = await this.subdomainRepo.existsByName(domain.id, name);
+    if (exists) {
+      throw new Error('该二级域名已被注册，请换一个名称');
+    }
+
     const requireReview = domain.require_review === 1;
 
     const log: OperationLog = {

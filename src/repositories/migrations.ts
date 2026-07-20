@@ -3,20 +3,53 @@ import { Database } from './database';
 const INITIAL_SCHEMA_VERSION = '0001_initial_schema';
 
 export async function runMigrations(db: Database): Promise<void> {
-  const alreadyApplied = await isMigrationApplied(db, INITIAL_SCHEMA_VERSION);
-  if (alreadyApplied) {
+  const initialApplied = await isMigrationApplied(db, INITIAL_SCHEMA_VERSION);
+  if (!initialApplied) {
+    const sql = getInitialSchemaSQL();
+    const statements = sql
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0 && !s.startsWith('--'));
+
+    for (const stmt of statements) {
+      await db.execute(stmt);
+    }
+  }
+
+  await runMigration0002(db);
+}
+
+async function runMigration0002(db: Database): Promise<void> {
+  const version = '0002_add_subdomain_reject_reason';
+  if (await isMigrationApplied(db, version)) {
     return;
   }
 
-  const sql = getInitialSchemaSQL();
-  const statements = sql
-    .split(';')
-    .map(s => s.trim())
-    .filter(s => s.length > 0 && !s.startsWith('--'));
-
-  for (const stmt of statements) {
-    await db.execute(stmt);
+  try {
+    await db.execute(`ALTER TABLE subdomains ADD COLUMN reject_reason TEXT NOT NULL DEFAULT ''`);
+  } catch (e: any) {
+    if (!e?.message?.includes('duplicate column name') && !e?.message?.includes('already exists')) {
+      throw e;
+    }
   }
+
+  try {
+    await db.execute(`ALTER TABLE subdomains ADD COLUMN reviewed_by INTEGER REFERENCES users(id) ON UPDATE CASCADE ON DELETE SET NULL`);
+  } catch (e: any) {
+    if (!e?.message?.includes('duplicate column name') && !e?.message?.includes('already exists')) {
+      throw e;
+    }
+  }
+
+  try {
+    await db.execute(`ALTER TABLE subdomains ADD COLUMN reviewed_at INTEGER NOT NULL DEFAULT 0`);
+  } catch (e: any) {
+    if (!e?.message?.includes('duplicate column name') && !e?.message?.includes('already exists')) {
+      throw e;
+    }
+  }
+
+  await db.execute(`INSERT OR IGNORE INTO schema_migrations(version) VALUES (?)`, [version]);
 }
 
 async function isMigrationApplied(db: Database, version: string): Promise<boolean> {

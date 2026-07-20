@@ -94,6 +94,9 @@ export class APIController {
       if (error.message.includes('reserved')) {
         return c.json({ code: 'RESERVED_NAME', message: error.message }, 400);
       }
+      if (error.message.includes('已被注册') || error.message.includes('UNIQUE constraint') || error.message.includes('SQLITE_CONSTRAINT')) {
+        return c.json({ code: 'ALREADY_EXISTS', message: '该二级域名已被注册，请换一个名称' }, 400);
+      }
       return c.json({ code: 'INTERNAL_ERROR', message: error.message || 'Failed to create subdomain' }, 500);
     }
   }
