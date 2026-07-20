@@ -5,6 +5,7 @@ import { getAuth } from '../middleware/auth';
 import { getRegisteredKeys, getProvider, Provider, Zone, DNSRecord } from '../dns';
 import { encrypt, decrypt } from '../utils/secrets';
 import { loadEnvConfig } from '../config/env';
+import { OperationLog } from '../models';
 
 export class AdminController {
   constructor(private db: Database) {}
@@ -486,11 +487,27 @@ export class AdminController {
       if (!uid || !did || !name || !type || !value) {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing required fields' }, 400);
       }
+
+      const auth = getAuth(c);
+      const adminId = auth.user.id;
       
       const adminRepo = new AdminRepository(this.db);
       const id = await adminRepo.createRecord({
         uid, did, name, type, value, line_id: line_id || '0'
       });
+
+      const log: OperationLog = {
+        uid: uid,
+        admin_uid: adminId,
+        source: 'admin',
+        target_type: 'record',
+        target_id: String(id),
+        ip: c.req.header('x-forwarded-for') || '',
+        action: 'create',
+        message: `Admin created record ${name} (${type}) for user #${uid}`,
+        extra: JSON.stringify({ did, name, type, value, line_id: line_id || '0' })
+      };
+      await adminRepo.insertOperationLog(log);
       
       return c.json({ code: 'OK', message: 'Record created', data: { id } }, 201);
     } catch (error: any) {
@@ -508,9 +525,24 @@ export class AdminController {
       }
       
       const { name, type, value, line_id } = body;
+
+      const auth = getAuth(c);
+      const adminId = auth.user.id;
       
       const adminRepo = new AdminRepository(this.db);
       await adminRepo.updateRecord(id, { name, type, value, line_id });
+
+      const log: OperationLog = {
+        admin_uid: adminId,
+        source: 'admin',
+        target_type: 'record',
+        target_id: String(id),
+        ip: c.req.header('x-forwarded-for') || '',
+        action: 'update',
+        message: `Admin updated record #${id}`,
+        extra: JSON.stringify({ name, type, value, line_id })
+      };
+      await adminRepo.insertOperationLog(log);
       
       return c.json({ code: 'OK', message: 'Record updated' });
     } catch (error: any) {
@@ -525,9 +557,24 @@ export class AdminController {
       if (!id) {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing record ID' }, 400);
       }
+
+      const auth = getAuth(c);
+      const adminId = auth.user.id;
       
       const adminRepo = new AdminRepository(this.db);
       await adminRepo.deleteRecord(id);
+
+      const log: OperationLog = {
+        admin_uid: adminId,
+        source: 'admin',
+        target_type: 'record',
+        target_id: String(id),
+        ip: c.req.header('x-forwarded-for') || '',
+        action: 'delete',
+        message: `Admin deleted record #${id}`,
+        extra: ''
+      };
+      await adminRepo.insertOperationLog(log);
       
       return c.json({ code: 'OK', message: 'Record deleted' });
     } catch (error: any) {
@@ -542,9 +589,14 @@ export class AdminController {
       const page_size = parseInt(c.req.query('page_size') || c.req.query('limit') || '100');
       const limit = page_size;
       const offset = (page - 1) * page_size;
-      
-      const logs = await adminRepo.getOperationLogs(limit, offset);
-      const count = await adminRepo.getOperationLogsCount();
+
+      const source = c.req.query('source') || undefined;
+      const action = c.req.query('action') || undefined;
+      const keyword = c.req.query('keyword') || undefined;
+      const filters = { source, action, keyword };
+
+      const logs = await adminRepo.getOperationLogs(limit, offset, filters);
+      const count = await adminRepo.getOperationLogsCount(filters);
       
       return c.json({
         code: 'OK',
@@ -556,9 +608,9 @@ export class AdminController {
           page_size
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Get operation logs error:', error);
-      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get operation logs' }, 500);
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get operation logs: ' + (error?.message || String(error)) }, 500);
     }
   }
 

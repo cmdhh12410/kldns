@@ -53,7 +53,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { listLogsPage, type LogItem } from '../../api/admin'
+import { apiErrorMessage } from '../../api/errors'
 
 const logs = ref<LogItem[]>([])
 const loading = ref(false)
@@ -71,8 +73,14 @@ async function load() {
   loading.value = true
   try {
     const response = await listLogsPage({ ...filterParams(), page: page.value, page_size: pageSize.value })
-    logs.value = response.data.items
-    total.value = response.data.total
+    const items = Array.isArray(response.data.items) ? response.data.items : []
+    logs.value = items
+    total.value = response.data.total || 0
+  } catch (error) {
+    console.error('Load operation logs failed:', error)
+    ElMessage.error(apiErrorMessage(error, '加载操作日志失败'))
+    logs.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }

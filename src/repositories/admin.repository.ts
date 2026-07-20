@@ -1,4 +1,5 @@
 import { Database } from './database';
+import { OperationLog } from '../models';
 
 export class AdminRepository {
   constructor(private db: Database) {}
@@ -319,23 +320,71 @@ export class AdminRepository {
     await this.db.execute('DELETE FROM records WHERE id = ?', [id]);
   }
 
-  async getOperationLogs(limit: number = 100, offset: number = 0): Promise<any[]> {
-    return await this.db.query(
-      `SELECT l.id, l.uid, l.admin_uid, l.action, l.target_type, l.target_id, l.message, l.created_at,
-              u.username as user_name, a.username as admin_name
-       FROM operation_logs l
-       LEFT JOIN users u ON u.id = l.uid
-       LEFT JOIN users a ON a.id = l.admin_uid
-       ORDER BY l.id DESC
-       LIMIT ? OFFSET ?`,
-      [limit, offset]
+  async insertOperationLog(log: OperationLog): Promise<void> {
+    await this.db.execute(
+      `INSERT INTO operation_logs (uid, admin_uid, source, target_type, target_id, ip, action, message, extra)
+       VALUES (NULLIF(?, 0), NULLIF(?, 0), ?, ?, ?, ?, ?, ?, ?)`,
+      [log.uid || 0, log.admin_uid || 0, log.source, log.target_type, log.target_id, log.ip || '', log.action, log.message, log.extra]
     );
   }
 
-  async getOperationLogsCount(): Promise<number> {
-    const result = await this.db.queryOne<{ count: number }>(
-      'SELECT COUNT(*) as count FROM operation_logs'
-    );
+  async getOperationLogs(limit: number = 100, offset: number = 0, filters?: { source?: string; action?: string; keyword?: string }): Promise<any[]> {
+    let query = `SELECT l.id, l.uid, l.admin_uid, l.source, l.action, l.target_type, l.target_id, l.message, l.created_at,
+                        u.username, a.username as admin_username
+                 FROM operation_logs l
+                 LEFT JOIN users u ON u.id = l.uid
+                 LEFT JOIN users a ON a.id = l.admin_uid`;
+    const values: any[] = [];
+    const conditions: string[] = [];
+
+    if (filters?.source) {
+      conditions.push('l.source = ?');
+      values.push(filters.source);
+    }
+    if (filters?.action) {
+      conditions.push('l.action = ?');
+      values.push(filters.action);
+    }
+    if (filters?.keyword) {
+      conditions.push('(l.message LIKE ? OR l.target_id LIKE ?)');
+      const kw = `%${filters.keyword}%`;
+      values.push(kw, kw);
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY l.id DESC LIMIT ? OFFSET ?';
+    values.push(limit, offset);
+
+    return await this.db.query(query, values);
+  }
+
+  async getOperationLogsCount(filters?: { source?: string; action?: string; keyword?: string }): Promise<number> {
+    let query = 'SELECT COUNT(*) as count FROM operation_logs l';
+    const values: any[] = [];
+    const conditions: string[] = [];
+
+    if (filters?.source) {
+      conditions.push('l.source = ?');
+      values.push(filters.source);
+    }
+    if (filters?.action) {
+      conditions.push('l.action = ?');
+      values.push(filters.action);
+    }
+    if (filters?.keyword) {
+      conditions.push('(l.message LIKE ? OR l.target_id LIKE ?)');
+      const kw = `%${filters.keyword}%`;
+      values.push(kw, kw);
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    const result = await this.db.queryOne<{ count: number }>(query, values);
     return result?.count || 0;
   }
 }
