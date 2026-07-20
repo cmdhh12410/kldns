@@ -207,7 +207,7 @@ export class AdminRepository {
 
   async getSubdomains(limit: number = 100, offset: number = 0, status?: number): Promise<any[]> {
     let query = `SELECT s.id, s.uid, s.did, s.name, s.full_domain, s.status, s.purpose,
-                        s.reject_reason, s.reviewed_by, s.reviewed_at, s.created_at,
+                        s.created_at, s.updated_at,
                         u.username, d.domain, d.points_cost as registration_cost,
                         COUNT(r.id) as record_count
                  FROM subdomains s
