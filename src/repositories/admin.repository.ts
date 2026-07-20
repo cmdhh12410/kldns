@@ -243,8 +243,8 @@ export class AdminRepository {
 
   async getRecords(limit: number = 100, offset: number = 0): Promise<any[]> {
     return await this.db.query(
-      `SELECT r.id, r.uid, r.did, r.subdomain_id, r.name, r.type, r.value, r.line, r.created_at,
-              u.username, d.domain, s.name as subdomain_name
+      `SELECT r.id, r.uid, r.did, r.subdomain_id, r.record_id, r.name, r.type, r.value, r.line_id, r.line, r.created_at,
+              u.username, d.domain, s.name as subdomain
        FROM records r
        LEFT JOIN users u ON u.id = r.uid
        LEFT JOIN domains d ON d.id = r.did
@@ -292,7 +292,7 @@ export class AdminRepository {
     const result = await this.db.execute(
       `INSERT INTO records (uid, did, subdomain_id, record_id, name, type, value, line_id, line)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [record.uid, record.did, record.subdomain_id || null, record.record_id || null, record.name, record.type, record.value, record.line_id, record.line || '默认']
+      [record.uid, record.did, record.subdomain_id || null, record.record_id || '', record.name, record.type, record.value, record.line_id, record.line || '默认']
     );
     return result.lastInsertRowId || 0;
   }

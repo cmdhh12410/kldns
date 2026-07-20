@@ -500,7 +500,7 @@ export class AdminController {
 
   async updateRecord(c: Context) {
     try {
-      const id = parseInt(c.req.param('id'));
+      const id = parseInt(c.req.param('id') || '0');
       const body = await c.req.json();
       
       if (!id) {
@@ -520,7 +520,7 @@ export class AdminController {
 
   async deleteRecord(c: Context) {
     try {
-      const id = parseInt(c.req.param('id'));
+      const id = parseInt(c.req.param('id') || '0');
       
       if (!id) {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing record ID' }, 400);

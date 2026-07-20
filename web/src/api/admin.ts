@@ -38,9 +38,6 @@ export interface AdminSubdomain {
   full_domain: string
   status: number
   purpose: string
-  reject_reason: string
-  reviewed_by: number
-  reviewed_at: number
   username: string
   domain: string
   record_count: number
@@ -167,7 +164,9 @@ export interface AdminPointAdjustResult {
 }
 
 export function listAdminUsers(params: AdminUserQuery = {}) {
-  return http.get<unknown, ApiEnvelope<AdminUser[]>>('/admin/users', { params })
+  return http.get<unknown, ApiEnvelope<PageResult<AdminUser>>>('/admin/users', { params }).then(
+    (r) => ({ ...r, data: r.data.items }) as unknown as ApiEnvelope<AdminUser[]>,
+  )
 }
 
 export function listAdminUsersPage(params: AdminUserQuery & PageQuery) {
@@ -208,7 +207,9 @@ export function deleteAdminGroup(id: number) {
 }
 
 export function listAdminDomains(params: AdminDomainQuery = {}) {
-  return http.get<unknown, ApiEnvelope<AdminDomain[]>>('/admin/domains', { params })
+  return http.get<unknown, ApiEnvelope<PageResult<AdminDomain>>>('/admin/domains', { params }).then(
+    (r) => ({ ...r, data: r.data.items }) as unknown as ApiEnvelope<AdminDomain[]>,
+  )
 }
 
 export function listAdminDomainsPage(params: AdminDomainQuery & PageQuery) {
@@ -239,7 +240,9 @@ export function listProviderZones(payload: { key: string; config: Record<string,
 }
 
 export function listAdminRecords(params: AdminRecordQuery = {}) {
-  return http.get<unknown, ApiEnvelope<RecordItem[]>>('/admin/records', { params })
+  return http.get<unknown, ApiEnvelope<PageResult<RecordItem>>>('/admin/records', { params }).then(
+    (r) => ({ ...r, data: r.data.items }) as unknown as ApiEnvelope<RecordItem[]>,
+  )
 }
 
 export function listAdminRecordsPage(params: AdminRecordQuery & PageQuery) {
@@ -247,7 +250,9 @@ export function listAdminRecordsPage(params: AdminRecordQuery & PageQuery) {
 }
 
 export function listAdminSubdomains(params: AdminSubdomainQuery = {}) {
-  return http.get<unknown, ApiEnvelope<AdminSubdomain[]>>('/admin/subdomains', { params })
+  return http.get<unknown, ApiEnvelope<PageResult<AdminSubdomain>>>('/admin/subdomains', { params }).then(
+    (r) => ({ ...r, data: r.data.items }) as unknown as ApiEnvelope<AdminSubdomain[]>,
+  )
 }
 
 export function listAdminSubdomainsPage(params: AdminSubdomainQuery & PageQuery) {
@@ -288,7 +293,9 @@ export function deleteAdminRecord(id: number) {
 }
 
 export function listLogs(params: LogQuery = {}) {
-  return http.get<unknown, ApiEnvelope<LogItem[]>>('/admin/logs', { params })
+  return http.get<unknown, ApiEnvelope<PageResult<LogItem>>>('/admin/logs', { params }).then(
+    (r) => ({ ...r, data: r.data.items }) as unknown as ApiEnvelope<LogItem[]>,
+  )
 }
 
 export function listLogsPage(params: LogQuery & PageQuery) {

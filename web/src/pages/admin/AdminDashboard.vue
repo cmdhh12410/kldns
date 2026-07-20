@@ -86,11 +86,11 @@ onMounted(async () => {
       listAdminSubdomains(),
       listLogs(),
     ])
-    users.value = userResponse.data
-    domains.value = domainResponse.data
-    records.value = recordResponse.data
-    subdomains.value = subdomainResponse.data
-    logs.value = logResponse.data
+    users.value = Array.isArray(userResponse.data) ? userResponse.data : []
+    domains.value = Array.isArray(domainResponse.data) ? domainResponse.data : []
+    records.value = Array.isArray(recordResponse.data) ? recordResponse.data : []
+    subdomains.value = Array.isArray(subdomainResponse.data) ? subdomainResponse.data : []
+    logs.value = Array.isArray(logResponse.data) ? logResponse.data : []
   } catch (error: any) {
     console.error('Dashboard load failed:', error)
   } finally {

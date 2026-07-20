@@ -102,7 +102,7 @@ async function load() {
     ])
     items.value = subdomainResponse.data.items
     total.value = subdomainResponse.data.total
-    domains.value = domainResponse.data
+    domains.value = Array.isArray(domainResponse.data) ? domainResponse.data : []
   } finally {
     loading.value = false
   }

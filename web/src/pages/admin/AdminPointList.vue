@@ -122,7 +122,7 @@ onMounted(async () => {
 async function loadUsers() {
   try {
     const response = await listAdminUsers()
-    users.value = response.data
+    users.value = Array.isArray(response.data) ? response.data : []
   } catch (error) {
     ElMessage.error(apiErrorMessage(error, '获取用户列表失败'))
   }

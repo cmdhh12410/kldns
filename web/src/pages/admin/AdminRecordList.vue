@@ -200,9 +200,9 @@ async function load() {
     }
     records.value = recordResponse.data.items
     total.value = recordResponse.data.total
-    domains.value = domainResponse.data
-    users.value = userResponse.data
-    subdomains.value = subdomainResponse.data
+    domains.value = Array.isArray(domainResponse.data) ? domainResponse.data : []
+    users.value = Array.isArray(userResponse.data) ? userResponse.data : []
+    subdomains.value = Array.isArray(subdomainResponse.data) ? subdomainResponse.data : []
   } catch (error: any) {
     console.error('Load records failed:', error)
     ElMessage.error(apiErrorMessage(error, '加载解析记录失败'))
