@@ -375,7 +375,15 @@ export class AdminController {
           return c.json({ code: 'CONFIG_ERROR', message: 'Failed to decrypt provider configuration' }, 500);
         }
       } else {
-        return c.json({ code: 'NO_CONFIG', message: 'Domain has no DNS provider configuration' }, 400);
+        return c.json({ code: 'NO_CONFIG', message: '该域名未配置 DNS 平台凭证，请先编辑域名并填写 API Token' }, 400);
+      }
+
+      // Validate required config fields
+      const configFields = provider.configFields();
+      for (const field of configFields) {
+        if (field.required && !providerConfig[field.name]?.trim()) {
+          return c.json({ code: 'MISSING_CONFIG', message: `缺少必填配置项: ${field.label}（${field.name}），请编辑域名并填写` }, 400);
+        }
       }
 
       provider.configure(providerConfig);
