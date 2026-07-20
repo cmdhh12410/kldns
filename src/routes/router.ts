@@ -302,19 +302,19 @@ export function createRouter(): Hono<{ Bindings: Env }> {
   admin.post('/records', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.admin.getRecords(c);
+    return controllers.admin.createRecord(c);
   });
 
   admin.put('/records/:id', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.admin.getRecords(c);
+    return controllers.admin.updateRecord(c);
   });
 
   admin.delete('/records/:id', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.admin.getRecords(c);
+    return controllers.admin.deleteRecord(c);
   });
 
   // Subdomain management

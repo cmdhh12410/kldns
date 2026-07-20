@@ -288,6 +288,37 @@ export class AdminRepository {
     );
   }
 
+  async createRecord(record: { uid: number; did: number; name: string; type: string; value: string; line_id: string; line?: string; subdomain_id?: number | null; record_id?: string | null }): Promise<number> {
+    const result = await this.db.execute(
+      `INSERT INTO records (uid, did, subdomain_id, record_id, name, type, value, line_id, line)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [record.uid, record.did, record.subdomain_id || null, record.record_id || null, record.name, record.type, record.value, record.line_id, record.line || '默认']
+    );
+    return result.lastInsertRowId || 0;
+  }
+
+  async updateRecord(id: number, record: { name?: string; type?: string; value?: string; line_id?: string; line?: string }): Promise<void> {
+    const fields: string[] = [];
+    const values: any[] = [];
+    
+    if (record.name !== undefined) { fields.push('name = ?'); values.push(record.name); }
+    if (record.type !== undefined) { fields.push('type = ?'); values.push(record.type); }
+    if (record.value !== undefined) { fields.push('value = ?'); values.push(record.value); }
+    if (record.line_id !== undefined) { fields.push('line_id = ?'); values.push(record.line_id); }
+    if (record.line !== undefined) { fields.push('line = ?'); values.push(record.line); }
+    
+    if (fields.length === 0) return;
+    
+    await this.db.execute(
+      `UPDATE records SET ${fields.join(', ')} WHERE id = ?`,
+      [...values, id]
+    );
+  }
+
+  async deleteRecord(id: number): Promise<void> {
+    await this.db.execute('DELETE FROM records WHERE id = ?', [id]);
+  }
+
   async getOperationLogs(limit: number = 100, offset: number = 0): Promise<any[]> {
     return await this.db.query(
       `SELECT l.id, l.uid, l.admin_uid, l.action, l.target_type, l.target_id, l.message, l.created_at,

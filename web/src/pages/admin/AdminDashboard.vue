@@ -91,6 +91,8 @@ onMounted(async () => {
     records.value = recordResponse.data
     subdomains.value = subdomainResponse.data
     logs.value = logResponse.data
+  } catch (error: any) {
+    console.error('Dashboard load failed:', error)
   } finally {
     loading.value = false
   }

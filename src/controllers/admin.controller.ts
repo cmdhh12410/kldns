@@ -478,6 +478,63 @@ export class AdminController {
     }
   }
 
+  async createRecord(c: Context) {
+    try {
+      const body = await c.req.json();
+      const { uid, did, name, type, value, line_id } = body;
+      
+      if (!uid || !did || !name || !type || !value) {
+        return c.json({ code: 'INVALID_INPUT', message: 'Missing required fields' }, 400);
+      }
+      
+      const adminRepo = new AdminRepository(this.db);
+      const id = await adminRepo.createRecord({
+        uid, did, name, type, value, line_id: line_id || '0'
+      });
+      
+      return c.json({ code: 'OK', message: 'Record created', data: { id } }, 201);
+    } catch (error: any) {
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to create record: ' + (error?.message || String(error)) }, 500);
+    }
+  }
+
+  async updateRecord(c: Context) {
+    try {
+      const id = parseInt(c.req.param('id'));
+      const body = await c.req.json();
+      
+      if (!id) {
+        return c.json({ code: 'INVALID_INPUT', message: 'Missing record ID' }, 400);
+      }
+      
+      const { name, type, value, line_id } = body;
+      
+      const adminRepo = new AdminRepository(this.db);
+      await adminRepo.updateRecord(id, { name, type, value, line_id });
+      
+      return c.json({ code: 'OK', message: 'Record updated' });
+    } catch (error: any) {
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to update record: ' + (error?.message || String(error)) }, 500);
+    }
+  }
+
+  async deleteRecord(c: Context) {
+    try {
+      const id = parseInt(c.req.param('id'));
+      
+      if (!id) {
+        return c.json({ code: 'INVALID_INPUT', message: 'Missing record ID' }, 400);
+      }
+      
+      const adminRepo = new AdminRepository(this.db);
+      await adminRepo.deleteRecord(id);
+      
+      return c.json({ code: 'OK', message: 'Record deleted' });
+    } catch (error: any) {
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to delete record: ' + (error?.message || String(error)) }, 500);
+    }
+  }
+
   async getOperationLogs(c: Context) {
     try {
       const adminRepo = new AdminRepository(this.db);
