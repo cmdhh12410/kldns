@@ -190,11 +190,22 @@ async function load() {
       listAdminUsers(),
       listAdminSubdomains(),
     ])
+    console.log('[AdminRecordList] recordResponse:', recordResponse)
+    if (!recordResponse.data || !Array.isArray(recordResponse.data.items)) {
+      console.error('Unexpected record response format:', recordResponse)
+      ElMessage.error('解析记录数据格式异常')
+      records.value = []
+      total.value = 0
+      return
+    }
     records.value = recordResponse.data.items
     total.value = recordResponse.data.total
     domains.value = domainResponse.data
     users.value = userResponse.data
     subdomains.value = subdomainResponse.data
+  } catch (error: any) {
+    console.error('Load records failed:', error)
+    ElMessage.error(apiErrorMessage(error, '加载解析记录失败'))
   } finally {
     loading.value = false
   }

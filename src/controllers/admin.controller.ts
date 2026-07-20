@@ -460,8 +460,10 @@ export class AdminController {
       const limit = page_size;
       const offset = (page - 1) * page_size;
       
+      console.log('[Admin getRecords] query:', c.req.query(), 'limit:', limit, 'offset:', offset);
       const records = await adminRepo.getRecords(limit, offset);
       const count = await adminRepo.getRecordsCount();
+      console.log('[Admin getRecords] count:', count, 'records returned:', records.length);
       
       return c.json({
         code: 'OK',
