@@ -25,10 +25,7 @@ export class Database {
   }
 
   async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
-    return await this.db.transaction(async (tx) => {
-      const txDb = new Database(tx as D1Database);
-      return await fn(txDb);
-    });
+    return await fn(this);
   }
 
   getD1(): D1Database {
