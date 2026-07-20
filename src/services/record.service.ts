@@ -25,7 +25,7 @@ export class RecordService {
       throw new Error('Domain not found or no permission');
     }
 
-    const subdomain = await this.subdomainRepo.getSubdomainForUser(subdomainId, user.id);
+    const subdomain = await this.recordRepo.getSubdomainForUser(subdomainId, user.id);
     if (!subdomain) {
       throw new Error('Subdomain not found or no permission');
     }
