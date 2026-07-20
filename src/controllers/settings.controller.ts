@@ -87,4 +87,24 @@ export class SettingsController {
       return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get turnstile settings' }, 500);
     }
   }
+
+  async getDNSPolicy(c: Context) {
+    try {
+      const settingsRepo = new SettingsRepository(this.db);
+      const dnsSettings = await settingsRepo.getJSON<{
+        unlimited_subdomain_records: string;
+      }>('array_dns');
+
+      return c.json({
+        code: 'OK',
+        message: 'Success',
+        data: {
+          unlimited_subdomain_records: dnsSettings?.unlimited_subdomain_records === '1',
+        }
+      });
+    } catch (error) {
+      console.error('Get DNS policy error:', error);
+      return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to get DNS policy' }, 500);
+    }
+  }
 }

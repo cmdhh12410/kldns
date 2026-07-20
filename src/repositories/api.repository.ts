@@ -149,7 +149,12 @@ export class APIRepository {
     
     query += ` GROUP BY s.id, d.id ORDER BY s.id DESC`;
     
-    return await this.db.query(query, params);
+    const results = await this.db.query(query, params);
+    
+    return results.map(r => ({
+      ...r,
+      record_types: r.record_types ? r.record_types.split(',').map((t: string) => t.trim()) : [],
+    }));
   }
 
   async listRecords(uid: number, did?: number, subdomainId?: number, type?: string, keyword?: string): Promise<any[]> {

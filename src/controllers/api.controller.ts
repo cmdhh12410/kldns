@@ -241,7 +241,16 @@ export class APIController {
     try {
       const auth = getAuth(c);
       const apiRepo = new APIRepository(this.db);
-      const overview = await apiRepo.pointsOverview(auth.user.id);
+      const action = c.req.query('action');
+      const keyword = c.req.query('keyword');
+      const range = c.req.query('range');
+      
+      let since: number | undefined;
+      if (range && range !== 'all') {
+        since = Math.floor(Date.now() / 1000) - parseInt(range) * 24 * 60 * 60;
+      }
+      
+      const overview = await apiRepo.pointsOverview(auth.user.id, action || undefined, keyword || undefined, since);
       
       return c.json({
         code: 'OK',

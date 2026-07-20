@@ -135,7 +135,10 @@ const dnsPolicy = reactive({ unlimitedSubdomainRecords: true })
 const recordTypes = computed(() => Array.from(new Set(subdomains.value.flatMap((item) => item.record_types || []))).sort())
 const currentSubdomain = computed(() => subdomains.value.find((item) => item.id === form.subdomain_id))
 const currentTypes = computed(() => currentSubdomain.value?.record_types || recordTypes.value)
-const currentLineOptions = computed(() => [{ id: '0', name: '默认' }])
+const currentLineOptions = computed(() => [
+  { id: '0', name: '默认' },
+  { id: 'proxied', name: 'Cloudflare CDN' },
+])
 const policyNote = computed(() =>
   dnsPolicy.unlimitedSubdomainRecords
     ? '选择已注册二级域名，维护其解析记录。'

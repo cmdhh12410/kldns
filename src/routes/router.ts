@@ -109,7 +109,7 @@ export function createRouter(): Hono<{ Bindings: Env }> {
   api.get('/settings/dns-policy', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.settings.getSettings(c);
+    return controllers.settings.getDNSPolicy(c);
   });
 
   // Subdomain endpoints
