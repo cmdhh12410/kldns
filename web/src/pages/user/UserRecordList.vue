@@ -209,7 +209,13 @@ async function save() {
   }
   saving.value = true
   try {
-    const payload = { ...form, name: hostName, value: form.value.trim() }
+    const selectedSubdomain = subdomains.value.find((item) => item.id === form.subdomain_id)
+    const payload = {
+      ...form,
+      name: hostName,
+      value: form.value.trim(),
+      did: selectedSubdomain?.did,
+    }
     if (editing.value) {
       await updateRecord(editing.value.id, payload)
     } else {
