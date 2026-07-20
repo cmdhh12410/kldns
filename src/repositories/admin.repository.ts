@@ -262,6 +262,32 @@ export class AdminRepository {
     return result?.count || 0;
   }
 
+  async getDomainById(id: number): Promise<any | null> {
+    return await this.db.queryOne<any>(
+      `SELECT id, domain, provider_key, COALESCE(provider_config_ciphertext, '') as provider_config_ciphertext,
+              remote_zone_id, points_cost, record_types, beian, require_review,
+              COALESCE(description, '') as description, group_policy, created_at
+       FROM domains WHERE id = ?`,
+      [id]
+    );
+  }
+
+  async getExistingRecordIdsForDomain(did: number): Promise<Set<string>> {
+    const rows = await this.db.query<{ record_id: string }>(
+      `SELECT record_id FROM records WHERE did = ? AND record_id IS NOT NULL AND record_id != ''`,
+      [did]
+    );
+    return new Set(rows.map(r => r.record_id));
+  }
+
+  async insertSyncRecord(did: number, record: any): Promise<void> {
+    await this.db.execute(
+      `INSERT INTO records (uid, did, subdomain_id, record_id, name, type, value, line_id, line)
+       VALUES (0, ?, NULL, ?, ?, ?, ?, ?, ?)`,
+      [did, record.remote_id, record.name, record.type, record.value, record.line_id || 'default', record.line || '默认']
+    );
+  }
+
   async getOperationLogs(limit: number = 100, offset: number = 0): Promise<any[]> {
     return await this.db.query(
       `SELECT l.id, l.uid, l.admin_uid, l.action, l.target_type, l.target_id, l.message, l.created_at,

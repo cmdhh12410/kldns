@@ -2,8 +2,8 @@ import { Context } from 'hono';
 import { Database, AdminRepository, PointsRepository } from '../repositories';
 import { PointsService } from '../services';
 import { getAuth } from '../middleware/auth';
-import { getRegisteredKeys, getProvider, Provider, Zone } from '../dns';
-import { encrypt } from '../utils/secrets';
+import { getRegisteredKeys, getProvider, Provider, Zone, DNSRecord } from '../dns';
+import { encrypt, decrypt } from '../utils/secrets';
 import { loadEnvConfig } from '../config/env';
 
 export class AdminController {
@@ -341,6 +341,78 @@ export class AdminController {
     } catch (error) {
       console.error('Delete domain error:', error);
       return c.json({ code: 'INTERNAL_ERROR', message: 'Failed to delete domain' }, 500);
+    }
+  }
+
+  async syncDomainRecords(c: Context) {
+    try {
+      const id = c.req.param('id');
+      
+      if (!id) {
+        return c.json({ code: 'INVALID_INPUT', message: 'Missing domain ID' }, 400);
+      }
+
+      const adminRepo = new AdminRepository(this.db);
+      const domain = await adminRepo.getDomainById(parseInt(id));
+      
+      if (!domain) {
+        return c.json({ code: 'NOT_FOUND', message: 'Domain not found' }, 404);
+      }
+
+      const provider = getProvider(domain.provider_key);
+      if (!provider) {
+        return c.json({ code: 'PROVIDER_NOT_FOUND', message: 'DNS provider not found' }, 404);
+      }
+
+      const envConfig = loadEnvConfig(c.env);
+      let providerConfig: Record<string, string> = {};
+      if (domain.provider_config_ciphertext) {
+        try {
+          const decrypted = await decrypt(domain.provider_config_ciphertext, envConfig.SECRET_KEY);
+          providerConfig = JSON.parse(decrypted);
+        } catch (e) {
+          console.error('Failed to decrypt provider config:', e);
+          return c.json({ code: 'CONFIG_ERROR', message: 'Failed to decrypt provider configuration' }, 500);
+        }
+      } else {
+        return c.json({ code: 'NO_CONFIG', message: 'Domain has no DNS provider configuration' }, 400);
+      }
+
+      provider.configure(providerConfig);
+      const zone: Zone = { id: domain.remote_zone_id, domain: domain.domain };
+      const remoteRecords = await provider.listRecords(zone);
+
+      const existingIds = await adminRepo.getExistingRecordIdsForDomain(parseInt(id));
+
+      let created = 0;
+      let skipped = 0;
+
+      for (const record of remoteRecords) {
+        if (existingIds.has(record.remote_id)) {
+          skipped++;
+          continue;
+        }
+        try {
+          await adminRepo.insertSyncRecord(parseInt(id), record);
+          created++;
+        } catch (e) {
+          console.error('Failed to insert synced record:', e, record);
+          skipped++;
+        }
+      }
+
+      return c.json({
+        code: 'OK',
+        message: 'Sync completed',
+        data: {
+          total: remoteRecords.length,
+          created,
+          skipped,
+        }
+      });
+    } catch (error: any) {
+      console.error('Sync domain records error:', error);
+      return c.json({ code: 'INTERNAL_ERROR', message: error.message || 'Failed to sync records' }, 500);
     }
   }
 

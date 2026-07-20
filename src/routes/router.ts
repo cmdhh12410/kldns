@@ -264,7 +264,7 @@ export function createRouter(): Hono<{ Bindings: Env }> {
   admin.post('/domains/:id/sync-records', async (c) => {
     const db = new Database(c.env.DB);
     const controllers = createControllers(db);
-    return controllers.admin.updateDomain(c);
+    return controllers.admin.syncDomainRecords(c);
   });
 
   admin.put('/domains/:id', async (c) => {
