@@ -79,6 +79,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { listSettings, saveSettings, type SettingItem } from '../../api/admin'
+import { apiErrorMessage } from '../../api/errors'
 
 type SettingMap = Record<string, string>
 
@@ -113,6 +114,9 @@ async function load() {
   try {
     const response = await listSettings()
     applySettings(response.data)
+  } catch (error) {
+    console.error('Load settings failed:', error)
+    ElMessage.error(apiErrorMessage(error, '加载设置失败'))
   } finally {
     loading.value = false
   }
@@ -134,8 +138,12 @@ async function save() {
   }
 }
 
-function applySettings(items: SettingItem[]) {
-  const values = Object.fromEntries(items.map((item) => [item.key, item.value]))
+function applySettings(items: SettingItem[] | Record<string, string>) {
+  // 后端返回 Record<string, string> 对象格式，转换为 { key, value }[] 数组
+  const entries: SettingItem[] = Array.isArray(items)
+    ? items
+    : Object.entries(items).map(([key, value]) => ({ key, value }))
+  const values = Object.fromEntries(entries.map((item) => [item.key, item.value]))
   const user = parseObject(values.array_user)
   form.user.registerOpen = user.reg !== '0'
   form.user.reviewMode = user.review_mode === 'manual' ? 'manual' : 'auto'
