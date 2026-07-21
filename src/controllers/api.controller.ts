@@ -2,9 +2,15 @@ import { Context } from 'hono';
 import { Database, APIRepository, RecordRepository, SubdomainRepository } from '../repositories';
 import { RecordService, SubdomainService, PointsService } from '../services';
 import { getAuth } from '../middleware/auth';
+import { loadEnvConfig } from '../config/env';
 
 export class APIController {
   constructor(private db: Database) {}
+
+  private getSecretKey(c: Context): string {
+    const envConfig = loadEnvConfig(c.env);
+    return envConfig.SECRET_KEY;
+  }
 
   async getDomains(c: Context) {
     try {
@@ -161,7 +167,7 @@ export class APIController {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing required fields' }, 400);
       }
 
-      const recordService = new RecordService(this.db);
+      const recordService = new RecordService(this.db, this.getSecretKey(c));
       const record = await recordService.submitRecord(
         auth.user,
         did,
@@ -194,8 +200,8 @@ export class APIController {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing required fields' }, 400);
       }
 
-      const recordService = new RecordService(this.db);
-      const record = await recordService.updateRecord(
+      const recordService = new RecordService(this.db, this.getSecretKey(c));
+      const updated = await recordService.updateRecord(
         auth.user,
         parseInt(id),
         name,
@@ -207,7 +213,7 @@ export class APIController {
       return c.json({
         code: 'OK',
         message: 'Record updated successfully',
-        data: record
+        data: updated
       });
     } catch (error: any) {
       console.error('Update record error:', error);
@@ -224,7 +230,7 @@ export class APIController {
         return c.json({ code: 'INVALID_INPUT', message: 'Missing record ID' }, 400);
       }
 
-      const recordService = new RecordService(this.db);
+      const recordService = new RecordService(this.db, this.getSecretKey(c));
       await recordService.deleteRecord(auth.user, parseInt(id));
 
       return c.json({
@@ -342,12 +348,12 @@ export class APIController {
   }
 }
 
-function newAPIToken() {
+async function newAPIToken() {
   const randomBytes = Array.from(crypto.getRandomValues(new Uint8Array(32)))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
   const plain = `kldns_${randomBytes}`;
-  const hash = hashBearerToken(plain);
+  const hash = await hashBearerToken(plain);
   const hint = tokenHint(plain);
   return { plain, hash, hint };
 }

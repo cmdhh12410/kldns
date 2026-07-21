@@ -1,14 +1,17 @@
 import { Database, RecordRepository, SubdomainRepository } from '../repositories';
 import { User, Domain, Record, Subdomain, OperationLog } from '../models';
-import { getProvider, Provider, Zone, RecordInput, DNSRecord } from '../dns';
+import { Provider, Zone, RecordInput, DNSRecord } from '../dns';
+import { ProviderResolver } from './provider.resolver';
 
 export class RecordService {
   private recordRepo: RecordRepository;
   private subdomainRepo: SubdomainRepository;
+  private providerResolver: ProviderResolver;
 
-  constructor(private db: Database) {
+  constructor(private db: Database, secretKey: string) {
     this.recordRepo = new RecordRepository(db);
     this.subdomainRepo = new SubdomainRepository(db);
+    this.providerResolver = new ProviderResolver(db, secretKey);
   }
 
   async submitRecord(
@@ -25,10 +28,11 @@ export class RecordService {
       throw new Error('Domain not found or no permission');
     }
 
-    const subdomain = await this.recordRepo.getSubdomainForUser(subdomainId, user.id);
-    if (!subdomain) {
+    const subdomainResult = await this.recordRepo.getSubdomainForUser(subdomainId, user.id);
+    if (!subdomainResult) {
       throw new Error('Subdomain not found or no permission');
     }
+    const { subdomain } = subdomainResult;
 
     const fullName = name === '@' ? subdomain.name : `${name}.${subdomain.name}`;
     
@@ -37,12 +41,7 @@ export class RecordService {
       throw new Error('Record already exists');
     }
 
-    const provider = getProvider(domain.provider_key);
-    if (!provider) {
-      throw new Error('DNS provider not found');
-    }
-
-    provider.configure(JSON.parse(domain.provider_config_ciphertext || '{}'));
+    const provider = await this.providerResolver.resolve(domain);
 
     const zone: Zone = { id: domain.remote_zone_id, domain: domain.domain };
     const input: RecordInput = { name: fullName, type, value, line_id: lineId };
@@ -95,12 +94,7 @@ export class RecordService {
       throw new Error('Domain not found');
     }
 
-    const provider = getProvider(domain.provider_key);
-    if (!provider) {
-      throw new Error('DNS provider not found');
-    }
-
-    provider.configure(JSON.parse(domain.provider_config_ciphertext || '{}'));
+    const provider = await this.providerResolver.resolve(domain);
 
     const zone: Zone = { id: domain.remote_zone_id, domain: domain.domain };
     const input: RecordInput = { name, type, value, line_id: lineId };
@@ -141,12 +135,7 @@ export class RecordService {
       throw new Error('Domain not found');
     }
 
-    const provider = getProvider(domain.provider_key);
-    if (!provider) {
-      throw new Error('DNS provider not found');
-    }
-
-    provider.configure(JSON.parse(domain.provider_config_ciphertext || '{}'));
+    const provider = await this.providerResolver.resolve(domain);
 
     const zone: Zone = { id: domain.remote_zone_id, domain: domain.domain };
     await provider.deleteRecord(zone, record.record_id);

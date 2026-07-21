@@ -20,7 +20,7 @@ export class ProviderResolver {
     
     if (domain.provider_config_ciphertext) {
       try {
-        const decrypted = decrypt(domain.provider_config_ciphertext, this.secretKey);
+        const decrypted = await decrypt(domain.provider_config_ciphertext, this.secretKey);
         config = JSON.parse(decrypted);
       } catch (error) {
         throw new Error('Failed to decrypt provider configuration');
