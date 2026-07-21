@@ -7,5 +7,5 @@
 - [x] Checkpoint 5: `api.controller.ts` 中 `newAPIToken` 已正确 `await hashBearerToken`
 - [x] Checkpoint 6: `api.controller.ts` 中 `updateRecord` 返回正确的 `updated` 对象
 - [x] Checkpoint 7: 前端构建成功
-- [ ] Checkpoint 8: Worker 已成功部署到 Cloudflare
-- [ ] Checkpoint 9: 用户在页面上可正常添加解析记录且不再报 JSON 解析错误
+- [x] Checkpoint 8: Worker 已成功部署到 Cloudflare
+- [ ] Checkpoint 9: 用户在页面上可正常添加解析记录且不再报 JSON 解析错误（需用户在线验证）
